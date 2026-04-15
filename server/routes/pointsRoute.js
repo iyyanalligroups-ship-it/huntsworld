@@ -1,0 +1,10 @@
+const express = require("express");
+const router = express.Router();
+const pointController = require("../controllers/pointsController");
+router.post("/create-points", pointController.createPoint);
+router.get("/fetch-all-points", pointController.getPoints);
+router.get("/fetch-points-by-id/:id", pointController.getPointById);
+router.put("/update-points/:id", pointController.updatePoint);
+router.delete("/delete-points/:id", pointController.deletePoint);
+router.get("/view-point", pointController.getViewPointConfig);
+module.exports = router;

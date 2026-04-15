@@ -1,0 +1,8 @@
+/* tailwind.css or global stylesheet */
+.custom-swiper .swiper-slide {
+    margin-right: 0.75rem; /* Same as Tailwind's gap-3 = 12px */
+  }
+  .custom-swiper .swiper-wrapper {
+    margin-right: -0.75rem;
+  }
+  

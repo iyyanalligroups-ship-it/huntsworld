@@ -1,0 +1,13 @@
+$primary-color: #1C1B1F;
+$secondary-color: #eeeeee;
+$tertiary-color: #f6d32f;
+$accent-color: #ffff;
+$neutral-color: #e03733;
+
+:root {
+  --primary-color: #{$primary-color};
+  --secondary-color: #{$secondary-color};
+  --tertiary-color: #{$tertiary-color};
+  --accent-color: #{$accent-color};
+  --neutral-color: #{$neutral-color};
+}

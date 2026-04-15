@@ -1,0 +1,81 @@
+
+
+/* animations.css */
+@keyframes bellShake {
+  0% { transform: rotate(0deg); }
+  20% { transform: rotate(-5deg); }
+  40% { transform: rotate(5deg); }
+  60% { transform: rotate(-5deg); }
+  80% { transform: rotate(5deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.shake {
+  animation: bellShake 5s ease-in-out infinite;
+}
+
+/* animations.css */
+@keyframes shakeIcon {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(0); }
+  75% { transform: translateX(5px); }
+  100% { transform: translateX(0); }
+}
+
+.shakeIcon {
+  animation: shake 0.5s ease-in-out;
+}
+@keyframes shake {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(-5deg); }
+  20% { transform: rotate(5deg); }
+  30% { transform: rotate(0deg); }
+  40% { transform: rotate(5deg); }
+  50% { transform: rotate(-5deg); }
+  60% { transform: rotate(0deg); }
+  100% { transform: rotate(0deg); }
+}
+
+.shakeIcon {
+  animation: shake 1s ease-in-out;
+  animation-iteration-count: 2;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.bounce-in {
+  animation: bounceIn 0.4s ease-out forwards;
+}

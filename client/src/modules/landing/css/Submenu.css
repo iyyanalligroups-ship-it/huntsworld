@@ -1,0 +1,18 @@
+/* Submenu.css */
+.submenu-container {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: #cccccc transparent; /* Firefox */
+}
+
+.submenu-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.submenu-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.submenu-container::-webkit-scrollbar-thumb {
+  background: #cccccc;
+  border-radius: 3px;
+}

@@ -1,0 +1,16 @@
+{
+  "server": {
+    "baseDir": "dist",
+    "routes": {
+      "/": "dist"
+    }
+  },
+  "port": 4173,
+  "files": ["dist/**/*"],
+  "middleware": [
+    {
+      "route": "",
+      "handle": "connect-history-api-fallback"
+    }
+  ]
+}

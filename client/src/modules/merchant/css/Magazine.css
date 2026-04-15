@@ -1,0 +1,177 @@
+/* src/css/Magazine.css */
+
+/*
+  THE FIX: This is the CSS Isolation Boundary.
+  It erases all styles inherited from Tailwind's base styles (`@tailwind base`).
+  It resets properties to the browser's default styles, creating a clean
+  slate for this component and its children.
+*/
+.css-isolation-boundary {
+  all: revert;
+}
+
+/*
+  Now, inside the boundary, we must re-declare any base styles we need,
+  like the font, because 'revert' removed the one from Tailwind.
+*/
+.css-isolation-boundary * {
+  box-sizing: border-box; /* A good practice to re-apply */
+}
+
+/* From here, all your existing plain CSS will work as expected */
+
+.container {
+  background-color: #F3F4F6;
+  padding: 2rem 0;
+  max-width: 1024px;
+  margin: 0 auto;
+  font-family: 'Roboto', sans-serif;
+}
+
+.button {
+  background-color: #2563EB;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-bottom: 2rem;
+}
+
+.button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.button:hover:not(:disabled) {
+  background-color: #1D4ED8;
+}
+
+.page {
+  height: 297mm;
+  width: 210mm;
+  background-color: white;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  display: flex;
+  flex-direction: column;
+  padding: 2.5rem;
+  box-sizing: border-box;
+  color: #4B5563;
+  border: 1px solid #4B5563;
+  margin-bottom: 1rem;
+}
+
+.page h1, .page h2, .page h3, .page h4 {
+  color: #dc2626;
+  font-family: 'Montserrat', sans-serif;
+  margin: 0;
+}
+
+.page h1 {
+  font-size: 3.75rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.page h2 {
+  font-size: 1.875rem;
+  font-weight: bold;
+}
+
+.page h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 1.5rem;
+}
+
+.page h4 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 1.5rem;
+}
+
+.page p {
+  margin-top: 0.5rem;
+  line-height: 1.625;
+}
+
+.page ul {
+  margin-top: 1rem;
+  list-style: none;
+  padding-left: 0;
+}
+
+.page ul li {
+  border-left: 2px solid #dc2626;
+  padding-left: 0.75rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between; /* Added for Table of Contents alignment */
+}
+
+.footer {
+  margin-top: auto;
+  text-align: center;
+  font-size: 0.875rem;
+  color: #4B5563;
+  padding: 0.5rem;
+}
+
+.cover-logo {
+  width: 10rem;
+  height: 10rem;
+  margin: 0 auto 1.5rem auto; /* Center the logo */
+  object-fit: contain;
+  display: block;
+}
+
+.cover-subtitle {
+  font-size: 1.5rem;
+  font-style: italic;
+  margin-top: 0.75rem;
+  text-align: center;
+}
+
+.cover-text {
+  font-size: 1.25rem;
+  margin-top: 2rem;
+  color: #374151;
+  text-align: center;
+}
+
+.cover-date {
+  font-size: 1.125rem;
+  margin-top: 1rem;
+  color: #4B5563;
+  text-align: center;
+}
+
+.grid-two-columns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  color: #374151;
+  margin-top: 1rem;
+}
+
+.grid-three-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.seller-image {
+  width: 100%;
+  height: 6rem;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
