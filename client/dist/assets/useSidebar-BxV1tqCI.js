@@ -1,0 +1,1 @@
+import{r as e}from"./vendor-react-C8Bl5dty.js";import{cs as t}from"./index-DaeXLKix.js";const i=()=>{const r=e.useContext(t);if(!r)throw new Error("useSidebar must be used within a SidebarProvider");return r};export{i as u};

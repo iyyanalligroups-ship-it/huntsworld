@@ -1,0 +1,1 @@
+const r=e=>e?e.length<10?{isValid:!1,errorMessage:"Description must be at least 10 characters long"}:e.length>3e3?{isValid:!1,errorMessage:"Description cannot exceed 500 characters"}:{isValid:!0,errorMessage:""}:{isValid:!1,errorMessage:"Description is required"};export{r as v};

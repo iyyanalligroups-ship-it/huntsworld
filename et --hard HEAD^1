@@ -1,0 +1,101 @@
+[33m2fcbc11[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mSharmi[m[33m, [m[1;31morigin/Sharmi[m[33m)[m Merge branch 'Sharmi' of https://github.com/BM-ACADEMY/Huntsworld into Sharmi
+[33m50f92d7[m complaint for merchant is not complete
+[33m0fd2402[m Merge branch 'dev' into Sharmi
+[33mdf480a7[m Merge pull request #51 from BM-ACADEMY/charles
+[33m1ccb1dd[m subadmin module added
+[33mabb7ed5[m My complaints completed , complaint summary is static
+[33mc7e7459[m Merge pull request #50 from BM-ACADEMY/charles
+[33m2a0e570[m student and common use page changes
+[33m23a896c[m Complaint for merchant completed
+[33medca1d6[m reviews added in the dashboard of the merchant
+[33mddad738[m Merge branch 'charles' of https://github.com/BM-ACADEMY/Huntsworld into charles
+[33mdee8348[m changes in service provider page
+[33me6f8d9f[m home page reviews added
+[33m9dfad5f[m Merge pull request #49 from BM-ACADEMY/charles
+[33m6affd3d[m Merge branch 'dev' into charles
+[33m3f60248[m layout changes requirement page changes
+[33maa68cc2[m review home added
+[33mf130542[m[33m ([m[1;31morigin/snega[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/Snega[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32msnega[m[33m, [m[1;32mmain[m[33m)[m updated
+[33mcd982f6[m Merge branch 'dev' of https://github.com/BM-ACADEMY/Huntsworld into charles
+[33m8c4fd7a[m Merge pull request #48 from BM-ACADEMY/charles
+[33m9f81fd3[m view point added
+[33m1dec822[m Merge pull request #47 from BM-ACADEMY/snega
+[33mc171af5[m Merge branch 'dev' into snega
+[33ma842fc1[m Merge pull request #46 from BM-ACADEMY/charles
+[33m233565c[m changes in plans
+[33m6c824bc[m products added
+[33m879699f[m cloned from dev
+[33m0caa149[m Merge pull request #44 from BM-ACADEMY/charles
+[33mb487c78[m changes in plan
+[33m4a80b0c[m profile div sidebar changed
+[33m6414994[m Merge pull request #43 from BM-ACADEMY/dev
+[33m9d290e8[m Merge pull request #42 from BM-ACADEMY/charles
+[33m021f25f[m cors error
+[33me751db4[m Merge pull request #41 from BM-ACADEMY/dev
+[33mf6c1388[m Merge pull request #40 from BM-ACADEMY/charles
+[33mdda106e[m notification model
+[33m028cde9[m Merge pull request #39 from BM-ACADEMY/dev
+[33m5daaca5[m Merge pull request #38 from BM-ACADEMY/charles
+[33mbd03b62[m socket-io-client
+[33m9cc2d24[m Merge pull request #37 from BM-ACADEMY/dev
+[33mdcdfa14[m Merge pull request #36 from BM-ACADEMY/charles
+[33mba71827[m index file changes
+[33m5e31f34[m Merge pull request #35 from BM-ACADEMY/dev
+[33m986cf5c[m Merge pull request #34 from BM-ACADEMY/charles
+[33m08ebd4a[m index file changes
+[33mbad2184[m Merge pull request #33 from BM-ACADEMY/dev
+[33m4e172d0[m Merge pull request #32 from BM-ACADEMY/charles
+[33m0becd13[m once code command
+[33m2ffdf22[m Merge pull request #31 from BM-ACADEMY/charles
+[33m9ebb1d0[m frontend socket file changes
+[33m7749aff[m Merge pull request #30 from BM-ACADEMY/dev
+[33m9282016[m Merge pull request #29 from BM-ACADEMY/charles
+[33m2c959c3[m changes in socket file
+[33mfbc301c[m Merge pull request #28 from BM-ACADEMY/dev
+[33m0f4c448[m Merge pull request #27 from BM-ACADEMY/charles
+[33mf1571a6[m socket file changes
+[33m185d8da[m Merge pull request #26 from BM-ACADEMY/charles
+[33md04a412[m merchant panel
+[33m8584f7d[m Save local .env changes
+[33mb9581c4[m Merge pull request #25 from BM-ACADEMY/dev
+[33m2c15821[m Merge pull request #24 from BM-ACADEMY/charles
+[33md6930e1[m sidebar changes
+[33mfa9ab1b[m Merge pull request #23 from BM-ACADEMY/dev
+[33mf2246f9[m Merge pull request #22 from BM-ACADEMY/charles
+[33m20145d1[m env file changes
+[33mf688033[m student panel changes
+[33m0ee5554[m Merge pull request #21 from BM-ACADEMY/dev
+[33m28ab4bf[m Merge pull request #20 from BM-ACADEMY/charles
+[33m9f21b82[m grocery seller page changes
+[33mdfbf426[m Merge pull request #19 from BM-ACADEMY/snega
+[33m88ac14d[m sub adminpage
+[33m7d9fb3a[m Merge pull request #18 from BM-ACADEMY/dev
+[33m0feeec5[m Merge pull request #17 from BM-ACADEMY/charles
+[33m2166bd7[m changes in dashboard and plan subscription
+[33mf4be462[m wallet notification added
+[33m06bbe4b[m module layout setup
+[33mc8ff66e[m Merge pull request #16 from BM-ACADEMY/dev
+[33mf7f5c94[m Merge pull request #15 from BM-ACADEMY/charles
+[33m810cfec[m auth middleware added the dotenv
+[33m4e9a533[m Merge pull request #14 from BM-ACADEMY/dev
+[33m00af0b1[m Merge pull request #13 from BM-ACADEMY/charles
+[33m59f69c2[m name changes
+[33mb242de0[m Merge pull request #12 from BM-ACADEMY/dev
+[33md72ae2b[m Merge pull request #11 from BM-ACADEMY/charles
+[33m6da5ab7[m complaintform
+[33m6eaf928[m Merge pull request #10 from BM-ACADEMY/dev
+[33m4eebb35[m Merge pull request #9 from BM-ACADEMY/charles
+[33m983d8b9[m pathchanges
+[33maa2a505[m Merge pull request #8 from BM-ACADEMY/dev
+[33m4fd362f[m Merge pull request #7 from BM-ACADEMY/charles
+[33mb5ffc68[m merchant auth api have problem solved
+[33mec330bd[m Merge pull request #6 from BM-ACADEMY/dev
+[33m11d20e7[m Merge pull request #5 from BM-ACADEMY/charles
+[33m040a67a[m merchant model changes
+[33md324006[m Merge pull request #4 from BM-ACADEMY/charles
+[33m0d71762[m Merge pull request #3 from BM-ACADEMY/charles
+[33mf1b967c[m server env file changes made
+[33mebd60a5[m Merge pull request #2 from BM-ACADEMY/dev
+[33md8b4aa8[m Merge pull request #1 from BM-ACADEMY/charles
+[33m3d091ff[m server file changes
+[33m3383690[m Initial commit

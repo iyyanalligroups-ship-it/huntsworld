@@ -1,0 +1,1 @@
+function i(r){const e=r.replace(/[\s-]/g,"");return e?/^(?:\+91)?[6-9]\d{9}$/.test(e)?{isValid:!0,errorMessage:""}:{isValid:!1,errorMessage:"Invalid phone number format. Must be a 10-digit Indian mobile number starting with 6, 7, 8, or 9 (e.g., +919876543210 or 9876543210)"}:{isValid:!1,errorMessage:"Phone number is required"}}export{i as v};
