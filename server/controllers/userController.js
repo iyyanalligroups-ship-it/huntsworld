@@ -3000,8 +3000,15 @@ exports.sendEntityOtp = async (req, res) => {
       entity.number_otp = otp;
       entity.otpExpires = expiry;
       await entity.save();
-      const smsApiUrl = `https://online.chennaisms.com/api/mt/SendSMS?user=huntsworld&password=india123&senderid=HWHUNT&channel=Trans&DCS=0&flashsms=0&number=${value}&text=Your OTP is ${otp}. HUNTSWORLD`;
-      await axios.get(smsApiUrl).catch(e => console.error("Entity SMS error:", e.message));
+      // Normalize phone number (strip non-digits and take last 10)
+      const cleanPhone = value.replace(/\D/g, "").slice(-10);
+      const smsText = `Your OTP for login/verification is ${otp}. Please do not share this with anyone. – HUNTSWORLD`;
+      const smsApiUrl = `https://online.chennaisms.com/api/mt/SendSMS?user=huntsworld&password=india123&senderid=HWHUNT&channel=Trans&DCS=0&flashsms=0&number=${cleanPhone}&text=${encodeURIComponent(smsText)}`;
+
+      const response = await axios.get(smsApiUrl);
+      if (!response || response.status !== 200) {
+        throw new Error("Failed to send OTP via SMS API");
+      }
     }
 
     res.status(200).json({ success: true, message: `OTP sent successfully to ${contactType}` });

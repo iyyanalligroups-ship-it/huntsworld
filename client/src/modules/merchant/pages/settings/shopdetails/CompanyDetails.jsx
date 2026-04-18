@@ -23,14 +23,12 @@ import CompanyDetailListPage from './CompanyDetailListPage';
 import Loader from '@/loader/Loader';
 import { Badge } from '@/components/ui/badge';
 
-const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) => {
-  if (isVerifying) return null;
-
+const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying, cooldown }) => {
   if (isVerified && !isDirty) {
     return (
       <Badge
         variant="outline"
-        className="ml-2.5 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border-green-200 shadow-sm"
+        className="ml-2.5 text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border-green-300"
       >
         Verified
       </Badge>
@@ -44,9 +42,10 @@ const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) =
         variant="outline"
         size="sm"
         onClick={onVerify}
-        className="ml-2 h-7 px-3 text-[10px] uppercase tracking-wider font-bold text-primary hover:bg-primary/5 border-primary/30 rounded-full"
+        disabled={isVerifying || cooldown > 0}
+        className="ml-2 h-7 px-3 text-xs font-semibold text-primary hover:bg-primary/5 border-primary/30"
       >
-        Verify
+        {isVerifying ? <Loader2 className="h-3 w-3 animate-spin" /> : (cooldown > 0 ? `Verify (${cooldown}s)` : "Verify")}
       </Button>
     );
   }
@@ -89,6 +88,8 @@ function CompanyDetails() {
   const [originalEmail, setOriginalEmail] = useState("");
   const [originalPhone, setOriginalPhone] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  const [emailVerifyCooldown, setEmailVerifyCooldown] = useState(0);
+  const [phoneVerifyCooldown, setPhoneVerifyCooldown] = useState(0);
 
   // ─── New states for dynamic company types ───
   const [companyTypes, setCompanyTypes] = useState([]);
@@ -231,6 +232,15 @@ function CompanyDetails() {
       ...prev,
       [name]: validationResult.errorMessage,
     }));
+
+    // Reset verification status in UI if value changes from original
+    if (name === 'company_email') {
+      const isSame = value.trim().toLowerCase() === (originalEmail || "").trim().toLowerCase();
+      setVerificationStatus(prev => ({ ...prev, email: isSame }));
+    } else if (name === 'company_phone_number') {
+      const isSame = value.trim() === (originalPhone || "").trim();
+      setVerificationStatus(prev => ({ ...prev, phone: isSame }));
+    }
   };
 
   const handleSelectChange = (value) => {
@@ -331,10 +341,31 @@ function CompanyDetails() {
     }, 1000);
   };
 
+  useEffect(() => {
+    let timer;
+    if (emailVerifyCooldown > 0) {
+      timer = setInterval(() => {
+        setEmailVerifyCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [emailVerifyCooldown]);
+
+  useEffect(() => {
+    let timer;
+    if (phoneVerifyCooldown > 0) {
+      timer = setInterval(() => {
+        setPhoneVerifyCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [phoneVerifyCooldown]);
+
   const handleVerifyRequest = async (type) => {
     const value = type === 'email' ? formData.company_email : formData.company_phone_number;
     if (!value) return showToast(`Please provide an ${type}`, "error");
 
+    setIsVerifying(true);
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/users/send-entity-otp`, {
         method: "POST",
@@ -355,9 +386,15 @@ function CompanyDetails() {
       setVerificationType(type);
       setShowOtpSection(true);
       startCountdown();
+
+      if (type === 'email') setEmailVerifyCooldown(30);
+      else setPhoneVerifyCooldown(30);
+
       showToast(`OTP sent to your ${type}.`, "info");
     } catch (err) {
       showToast(err.message || "Failed to send OTP", "error");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -688,7 +725,13 @@ function CompanyDetails() {
                       <VerificationIndicator 
                         isVerified={verificationStatus.email} 
                         isDirty={formData.company_email !== originalEmail} 
-                        onVerify={() => handleVerifyRequest('email')} 
+                        isVerifying={isVerifying}
+                        onVerify={() => {
+                          if (emailVerifyCooldown === 0) {
+                            handleVerifyRequest('email');
+                          }
+                        }}
+                        cooldown={emailVerifyCooldown}
                       />
                     )}
                   </div>
@@ -725,7 +768,12 @@ function CompanyDetails() {
                       </div>
                       {otpError && <p className="text-[10px] text-red-500 mt-1">{otpError}</p>}
                       <div className="flex justify-between items-center mt-2">
-                        <button type="button" onClick={() => handleVerifyRequest('email')} disabled={countdown > 0} className="text-[10px] text-primary hover:underline font-medium cursor-pointer">
+                        <button 
+                          type="button" 
+                          onClick={() => handleVerifyRequest('email')} 
+                          disabled={countdown > 0 || isVerifying} 
+                          className="text-[10px] text-primary hover:underline font-medium cursor-pointer disabled:opacity-50"
+                        >
                           {countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
                         </button>
                         <button type="button" onClick={() => setShowOtpSection(false)} className="text-[10px] text-gray-500 hover:text-gray-700 font-medium cursor-pointer">Cancel</button>
@@ -763,7 +811,13 @@ function CompanyDetails() {
                       <VerificationIndicator 
                         isVerified={verificationStatus.phone} 
                         isDirty={formData.company_phone_number !== originalPhone} 
-                        onVerify={() => handleVerifyRequest('phone')} 
+                        isVerifying={isVerifying}
+                        onVerify={() => {
+                          if (phoneVerifyCooldown === 0) {
+                            handleVerifyRequest('phone');
+                          }
+                        }}
+                        cooldown={phoneVerifyCooldown}
                       />
                     )}
                   </div>
@@ -799,7 +853,12 @@ function CompanyDetails() {
                       </div>
                       {otpError && <p className="text-[10px] text-red-500 mt-1">{otpError}</p>}
                       <div className="flex justify-between items-center mt-2">
-                        <button type="button" onClick={() => handleVerifyRequest('phone')} disabled={countdown > 0} className="text-[10px] text-primary hover:underline font-medium cursor-pointer">
+                        <button 
+                          type="button" 
+                          onClick={() => handleVerifyRequest('phone')} 
+                          disabled={countdown > 0 || isVerifying} 
+                          className="text-[10px] text-primary hover:underline font-medium cursor-pointer disabled:opacity-50"
+                        >
                           {countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
                         </button>
                         <button type="button" onClick={() => setShowOtpSection(false)} className="text-[10px] text-gray-500 hover:text-gray-700 font-medium cursor-pointer">Cancel</button>

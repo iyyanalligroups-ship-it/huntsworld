@@ -105,18 +105,28 @@ exports.getSubCategoryById = async (req, res) => {
 exports.updateSubCategory = async (req, res) => {
   try {
     const { category_id, sub_category_name, sub_category_image } = req.body;
-      const modifiedName=  sub_category_name
-  .toLowerCase()
-  .replace(/,/g, '') // Remove commas
-  .replace(/&/g, 'and') // Replace ampersands
-  .replace(/\s+/g, '-') // Replace spaces with hyphens
-  .replace(/[^\w\-]+/g, '') // Remove special characters
-  .replace(/\-\-+/g, '-') // Replace multiple hyphens with a single one
-  .trim();
+    
+    let modifiedName;
+    if (sub_category_name) {
+      modifiedName = sub_category_name
+        .toLowerCase()
+        .replace(/,/g, '') // Remove commas
+        .replace(/&/g, 'and') // Replace ampersands
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/[^\w\-]+/g, '') // Remove special characters
+        .replace(/\-\-+/g, '-') // Replace multiple hyphens with a single one
+        .trim();
+    }
+
+    const updateData = {
+      ...(category_id && { category_id }),
+      ...(modifiedName && { sub_category_name: modifiedName }),
+      ...(sub_category_image !== undefined && { sub_category_image })
+    };
 
     const subCategory = await SubCategory.findByIdAndUpdate(
       req.params.id,
-      { category_id, sub_category_name:modifiedName, sub_category_image },
+      updateData,
       { new: true, runValidators: true }
     );
 

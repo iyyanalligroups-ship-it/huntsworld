@@ -183,23 +183,20 @@ const HomePage = () => {
             animate={{
               // 1. Fixed "X" position: move it to the edge of the 300px sidebar
               x: isSidebarOpen ? 300 : 0,
-
-              // 2. Reduce size so it doesn't hide banner content
-              width: isSidebarOpen ? "45px" : "32px",
-              height: isSidebarOpen ? "45px" : "80px",
-
-              borderRadius: isSidebarOpen ? "0 8px 8px 0" : "0 8px 8px 0",
-              backgroundColor: isSidebarOpen ? "#e03733" : "#e03733"
             }}
-            className="flex flex-col cursor-pointer items-center justify-center shadow-2xl border-y border-r border-white/20 text-white transition-all duration-300"
+            className={`flex flex-col cursor-pointer items-center justify-center shadow-2xl border-y border-r border-white/20 text-white transition-all duration-300 bg-[#e03733] rounded-r-lg ${
+              isSidebarOpen
+                ? "w-[45px] h-[45px]"
+                : "w-[36px] py-3 md:w-[48px] md:py-5"
+            }`}
           >
             {isSidebarOpen ? (
               // The X is now moved 300px to the right, appearing at the edge of the sidebar
               <X size={24} strokeWidth={3} />
             ) : (
               <>
-                <ListFilter size={16} className="mb-1" />
-                <span className="text-[9px] font-bold uppercase [writing-mode:vertical-lr] rotate-180 tracking-tighter">
+                <ListFilter className="w-4 h-4 md:w-6 md:h-6 mb-1 md:mb-2" />
+                <span className="text-[10px] md:text-sm font-bold uppercase [writing-mode:vertical-lr] rotate-180 tracking-tighter md:tracking-widest">
                   Categories
                 </span>
               </>
@@ -210,11 +207,14 @@ const HomePage = () => {
           ref={sidebarRef}
           className={`
             fixed top-0 left-0 h-screen w-[300px] z-[60] bg-white shadow-2xl
-            transform transition-transform duration-300 ease-in-out pt-20 border-r border-gray-200
+            transform transition-transform duration-300 ease-in-out flex flex-col border-r border-gray-200
             ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           `}
         >
-          <div className="h-full overflow-y-auto custom-scrollbar">
+          {/* Spacer for Top Content/Header */}
+          <div className="h-20 flex-shrink-0" />
+          
+          <div className="flex-1 overflow-y-auto custom-scrollbar">
             <CategorySidebar
               categories={categories}
               onHover={(cat) =>

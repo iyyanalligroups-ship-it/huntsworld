@@ -2708,9 +2708,9 @@ exports.getAllActiveTrustSealUsers = async (req, res) => {
 exports.getTrustSealPrice = async (req, res) => {
   try {
     const product = await CommonSubscriptionPlan.findOne({
-      name: "Digital Book",
-      category: "ebook",
-      durationType: "per_book",
+      name: "Trust seal",
+      category: "wallet",
+      durationType: "one_time",
     });
 
     const durationConfig = await Point.findOne({

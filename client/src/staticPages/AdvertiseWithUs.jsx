@@ -151,19 +151,24 @@ const AdvertiseWithUs = () => {
       </div>
     );
 
-  // Filter out plans that have 0 visible features
+  // Filter and Sort plans
   const filteredAndSortedPlans = (plans?.data || [])
+    .filter((plan) => {
+      const userRole = user?.user?.role?.role;
+      if (userRole === "MERCHANT") {
+        return plan.business_type === "merchant";
+      }
+      if (userRole === "GROCERY_SELLER") {
+        return plan.business_type === "grocery_seller";
+      }
+      return true; // Show all plans for students, regular users, or guests
+    })
     .map((plan) => {
       const features = (plan.elements || [])
-        // We now show all features that have a valid name
-        .filter(
-          (f) =>
-            f.element_name &&
-            f.element_name.trim() !== ""
-        );
+        .filter((f) => f.element_name && f.element_name.trim() !== "");
       return { ...plan, visibleFeatures: features };
     })
-    .filter((plan) => plan.visibleFeatures.length > 0) // At least 1 feature must exist
+    .filter((plan) => plan.visibleFeatures.length > 0)
     .sort((a, b) => a.price - b.price);
 
   return (

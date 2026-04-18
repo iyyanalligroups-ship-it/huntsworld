@@ -20,14 +20,12 @@ import { AuthContext } from "@/modules/landing/context/AuthContext";
 // Import the validation function
 import { validatePhoneNumber } from "@/modules/validation/phoneValidation"; // Adjust the path as needed
 
-const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) => {
-  if (isVerifying) return null;
-
+const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying, cooldown }) => {
   if (isVerified && !isDirty) {
     return (
       <Badge
         variant="outline"
-        className="ml-2.5 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border-green-200 shadow-sm"
+        className="ml-2.5 text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border-green-300"
       >
         Verified
       </Badge>
@@ -41,9 +39,10 @@ const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) =
         variant="outline"
         size="sm"
         onClick={onVerify}
-        className="ml-2 h-7 px-3 text-[10px] uppercase tracking-wider font-bold text-primary hover:bg-primary/5 border-primary/30 rounded-full"
+        disabled={isVerifying || cooldown > 0}
+        className="ml-2 h-7 px-3 text-xs font-semibold text-primary hover:bg-primary/5 border-primary/30"
       >
-        Verify
+        {isVerifying ? <Loader2 className="h-3 w-3 animate-spin" /> : (cooldown > 0 ? `Verify (${cooldown}s)` : "Verify")}
       </Button>
     );
   }
@@ -134,11 +133,13 @@ const Profile = ({ userId }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     
     // Track dirty verification state
-    if (name === "email" && value.trim() !== (originalEmail || "").trim()) {
-      setVerificationStatus((prev) => ({ ...prev, email: false }));
+    if (name === "email") {
+      const isSame = value.trim().toLowerCase() === (originalEmail || "").trim().toLowerCase();
+      setVerificationStatus((prev) => ({ ...prev, email: isSame }));
     }
-    if (name === "phone" && value.trim() !== (originalPhone || "").trim()) {
-      setVerificationStatus((prev) => ({ ...prev, phone: false }));
+    if (name === "phone") {
+      const isSame = value.trim() === (originalPhone || "").trim();
+      setVerificationStatus((prev) => ({ ...prev, phone: isSame }));
     }
 
     // Clear specific field error when user starts typing
@@ -542,9 +543,9 @@ const Profile = ({ userId }) => {
                 </div>
                 <VerificationIndicator
                   isVerified={verificationStatus.email}
-                  isDirty={safeFormData.email !== originalEmail}
+                  isDirty={safeFormData.email.trim().toLowerCase() !== (originalEmail || "").trim().toLowerCase()}
                   onVerify={handleSave}
-                  isVerifying={showOtpSection && verificationType === "email"}
+                  isVerifying={showOtpSection && verificationType === "email" && manualLoading}
                 />
               </div>
               {showOtpSection && verificationType === "email" && (
@@ -590,9 +591,9 @@ const Profile = ({ userId }) => {
                 </div>
                 <VerificationIndicator
                   isVerified={verificationStatus.phone}
-                  isDirty={safeFormData.phone !== originalPhone}
+                  isDirty={safeFormData.phone.trim() !== (originalPhone || "").trim()}
                   onVerify={handleSave}
-                  isVerifying={showOtpSection && verificationType === "phone"}
+                  isVerifying={showOtpSection && verificationType === "phone" && manualLoading}
                 />
               </div>
               {showOtpSection && verificationType === "phone" && (

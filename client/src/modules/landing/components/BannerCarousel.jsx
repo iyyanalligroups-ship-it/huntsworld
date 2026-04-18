@@ -32,6 +32,8 @@ const BannerCarousel = () => {
         const res = await axios.get(
           `${import.meta.env.VITE_API_URL}/banner-payment/default/active`
         );
+        console.log(res.data.data,'banner carousel default');
+        
         if (res?.data?.success && res.data.data?.image_urls?.[0]) {
           setDefaultImage(res.data.data.image_urls[0]);
         }
@@ -47,9 +49,11 @@ const BannerCarousel = () => {
     const fetchAdminBanners = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.env.VITE_API_URL}/admin-banners/active`
+          `${import.meta.env.VITE_API_URL}/admin-banner/active`
         );
         if (res?.data?.success) {
+          console.log(res.data.data,'banner carousel');
+          
           setAdminBanners(res.data.data || []);
         }
       } catch (err) {
@@ -77,10 +81,15 @@ const BannerCarousel = () => {
       createdAt: b.createdAt,
     }));
 
-  // Combine all banners → newest first
-  const allBanners = [...formattedAdminBanners, ...merchantBanners].sort(
-    (a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
-  );
+  // Combine all banners, de-duplicate by image URL, and sort by newest first
+  const allBanners = Array.from(
+    new Map(
+      [...formattedAdminBanners, ...merchantBanners].map((banner) => [
+        banner.banner_image,
+        banner,
+      ])
+    ).values()
+  ).sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
   // ────────────────────────────────────────────────
   // Render logic
@@ -118,14 +127,13 @@ const BannerCarousel = () => {
         }}
         loop={allBanners.length > 1}
         className="h-full w-full"
-        navigation={{
+        navigation={allBanners.length > 1 ? {
           prevEl: navigationPrevRef.current,
           nextEl: navigationNextRef.current,
-        }}
+        } : false}
         onBeforeInit={(swiper) => {
           swiperRef.current = swiper;
-          // Important: attach navigation elements after refs are ready
-          if (swiper.params.navigation && navigationPrevRef.current && navigationNextRef.current) {
+          if (allBanners.length > 1 && swiper.params.navigation && navigationPrevRef.current && navigationNextRef.current) {
             swiper.params.navigation.prevEl = navigationPrevRef.current;
             swiper.params.navigation.nextEl = navigationNextRef.current;
             swiper.navigation?.init?.();
@@ -133,65 +141,57 @@ const BannerCarousel = () => {
           }
         }}
       >
-        {allBanners.map((banner, i) => (
-          <SwiperSlide key={banner._id || `slide-${i}`}>
-            {banner.link && banner.link.trim() ? (
-              <a
-                href={banner.link.trim()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="relative h-full w-full cursor-pointer block"
-              >
-                <img
-                  src={banner.banner_image}
-                  alt={banner.title || "Banner"}
-                  className="h-full w-full object-fill md:object-cover transition-transform duration-[7000ms] md:swiper-slide-active:scale-110"
-                  onError={(e) => {
-                    e.currentTarget.src = "/fallback-banner.jpg";
-                    e.currentTarget.alt = "Image failed to load";
-                  }}
-                />
+        {allBanners.map((banner, i) => {
+          const hasLink = !!banner.link?.trim();
+          const hasCompany = !!banner.company_name?.trim();
+          const isClickable = hasLink || hasCompany;
 
-                <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-
-                {banner.title && (
-                  <div className="banner-title absolute bottom-4 left-4 text-white text-sm md:text-base font-medium bg-black/50 px-3 py-1 rounded opacity-0 transition-opacity duration-400 swiper-slide-active:opacity-100">
-                    {banner.title}
-                  </div>
-                )}
-              </a>
-            ) : (
-              <div
-                className="relative h-full w-full cursor-pointer"
-                onClick={() => {
-                  if (banner.company_name?.trim()) {
-                    navigate(
-                      `/company/${encodeURIComponent(banner.company_name)}`
-                    );
-                  }
+          const renderContent = (
+            <>
+              <img
+                src={banner.banner_image}
+                alt={banner.title || "Banner"}
+                className="h-full w-full object-fill md:object-cover transition-transform duration-[7000ms] md:swiper-slide-active:scale-110"
+                onError={(e) => {
+                  e.currentTarget.src = "/fallback-banner.jpg";
+                  e.currentTarget.alt = "Image failed to load";
                 }}
-              >
-                <img
-                  src={banner.banner_image}
-                  alt={banner.title || "Banner"}
-                  className="h-full w-full object-fill md:object-cover transition-transform duration-[7000ms] md:swiper-slide-active:scale-110"
-                  onError={(e) => {
-                    e.currentTarget.src = "/fallback-banner.jpg";
-                    e.currentTarget.alt = "Image failed to load";
+              />
+              <div className="absolute inset-0 bg-black/20 pointer-events-none" />
+              {banner.title && (
+                <div className="banner-title absolute bottom-4 left-4 text-white text-sm md:text-base font-medium bg-black/50 px-3 py-1 rounded opacity-0 transition-opacity duration-400 swiper-slide-active:opacity-100">
+                  {banner.title}
+                </div>
+              )}
+            </>
+          );
+
+          return (
+            <SwiperSlide key={banner._id || `slide-${i}`}>
+              {hasLink ? (
+                <a
+                  href={banner.link.trim()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="relative h-full w-full cursor-pointer block"
+                >
+                  {renderContent}
+                </a>
+              ) : (
+                <div
+                  className={`relative h-full w-full ${isClickable ? "cursor-pointer" : "cursor-default"}`}
+                  onClick={() => {
+                    if (hasCompany) {
+                      navigate(`/company/${encodeURIComponent(banner.company_name.trim())}`);
+                    }
                   }}
-                />
-
-                <div className="absolute inset-0 bg-black/20 pointer-events-none" />
-
-                {banner.title && (
-                  <div className="banner-title absolute bottom-4 left-4 text-white text-sm md:text-base font-medium bg-black/50 px-3 py-1 rounded opacity-0 transition-opacity duration-400 swiper-slide-active:opacity-100">
-                    {banner.title}
-                  </div>
-                )}
-              </div>
-            )}
-          </SwiperSlide>
-        ))}
+                >
+                  {renderContent}
+                </div>
+              )}
+            </SwiperSlide>
+          );
+        })}
 
         {/* Custom Navigation Buttons */}
         {allBanners.length > 1 && (

@@ -22,14 +22,12 @@ import { AuthContext } from "@/modules/landing/context/AuthContext";
 import Loader from "@/loader/Loader";
 import { Badge } from "@/components/ui/badge";
 
-const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) => {
-  if (isVerifying) return null;
-
+const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying, cooldown }) => {
   if (isVerified && !isDirty) {
     return (
       <Badge
         variant="outline"
-        className="ml-2.5 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border-green-200 shadow-sm"
+        className="ml-2.5 text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border-green-300"
       >
         Verified
       </Badge>
@@ -43,9 +41,10 @@ const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) =
         variant="outline"
         size="sm"
         onClick={onVerify}
-        className="ml-2 h-7 px-3 text-[10px] uppercase tracking-wider font-bold text-primary hover:bg-primary/5 border-primary/30 rounded-full"
+        disabled={isVerifying || cooldown > 0}
+        className="ml-2 h-7 px-3 text-xs font-semibold text-primary hover:bg-primary/5 border-primary/30"
       >
-        Verify
+        {isVerifying ? <Loader2 className="h-3 w-3 animate-spin" /> : (cooldown > 0 ? `Verify (${cooldown}s)` : "Verify")}
       </Button>
     );
   }
@@ -144,6 +143,12 @@ const CollegeProfile = () => {
     const { name, value } = e.target;
     setFormData((prev) => {
       const newFormData = { ...prev, [name]: value };
+
+      // Reset verification status in UI if value changes from original
+      if (name === 'college_email') {
+        const isSame = value.trim().toLowerCase() === (originalEmail || "").trim().toLowerCase();
+        setVerificationStatus(prev => ({ ...prev, email: isSame }));
+      }
 
       // Date validation
       if (name === "college_start_month_year" || name === "college_end_month_year") {
@@ -392,8 +397,9 @@ const CollegeProfile = () => {
                     {formData.college_email && (
                       <VerificationIndicator 
                         isVerified={verificationStatus.email} 
-                        isDirty={formData.college_email !== originalEmail} 
+                        isDirty={formData.college_email.trim().toLowerCase() !== (originalEmail || "").trim().toLowerCase()} 
                         onVerify={() => handleVerifyRequest('email')} 
+                        isVerifying={showOtpSection && verificationType === 'email' && isVerifying}
                       />
                     )}
                   </Label>

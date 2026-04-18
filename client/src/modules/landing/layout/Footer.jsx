@@ -126,6 +126,7 @@ const Footer = () => {
           links: [
             { name: "Terms of Service", path: "/terms-condition" },
             { name: "Privacy Policy", path: "/privacy-policy" },
+            { name: "Delete Account", path: "/delete-account" },
           ],
         },
         {

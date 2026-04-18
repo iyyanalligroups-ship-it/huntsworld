@@ -6,7 +6,7 @@ const User = require("../models/userModel");
 const UserSubscription = require("../models/userSubscriptionPlanModel");
 const UserActiveFeature = require("../models/UserActiveFeature");
 const { checkDuplicates } = require("../utils/duplicateCheck");
-const { getSyncVerificationFlags } = require("../utils/verificationSync");
+const { getSyncVerificationFlags, propagateVerificationReset } = require("../utils/verificationSync");
 
 // Create a new student
 const createStudent = async (req, res) => {
@@ -176,9 +176,17 @@ const updateStudent = async (req, res) => {
 
     Object.assign(student, updateData);
 
+    if (updateData.college_email && updateData.college_email !== student.college_email) {
+       student.email_verified = false;
+       await propagateVerificationReset(student.user_id, 'email');
+    }
+
     // Cross-model verification sync on update
     const verificationFlags = await getSyncVerificationFlags(student.user_id, student.college_email, null);
-    student.email_verified = verificationFlags.email_verified;
+    
+    if (!updateData.college_email || updateData.college_email === student.college_email) {
+      student.email_verified = verificationFlags.email_verified;
+    }
 
     await student.save();
     res.json(student);
@@ -306,11 +314,18 @@ const updateStudentByUserId = async (req, res) => {
     // 🔥 Reset verification only if something changed
     if (isModified) {
       student.verified = false;
+      if (req.body.college_email && req.body.college_email.trim().toLowerCase() !== student.college_email?.trim().toLowerCase()) {
+         student.email_verified = false;
+         await propagateVerificationReset(userId, 'email');
+      }
     }
 
     // Cross-model verification sync on update (by userId)
     const verificationFlags = await getSyncVerificationFlags(userId, student.college_email, null);
-    student.email_verified = verificationFlags.email_verified;
+    
+    if (!req.body.college_email || req.body.college_email.trim().toLowerCase() === student.college_email?.trim().toLowerCase()) {
+       student.email_verified = verificationFlags.email_verified;
+    }
 
     await student.save();
 

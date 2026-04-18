@@ -50,14 +50,12 @@ import { validateAadhar } from "@/modules/validation/aadharValidation";
 const API_URL = import.meta.env.VITE_API_URL;
 const API_IMAGE_URL = import.meta.env.VITE_API_IMAGE_URL;
 
-const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) => {
-  if (isVerifying) return null;
-
+const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying, cooldown }) => {
   if (isVerified && !isDirty) {
     return (
       <Badge
         variant="outline"
-        className="ml-2.5 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border-green-200 shadow-sm"
+        className="ml-2.5 text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border-green-300"
       >
         Verified
       </Badge>
@@ -71,9 +69,10 @@ const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) =
         variant="outline"
         size="sm"
         onClick={onVerify}
-        className="ml-2 h-7 px-3 text-[10px] uppercase tracking-wider font-bold text-primary hover:bg-primary/5 border-primary/30 rounded-full"
+        disabled={isVerifying || cooldown > 0}
+        className="ml-2 h-7 px-3 text-xs font-semibold text-primary hover:bg-primary/5 border-primary/30"
       >
-        Verify
+        {isVerifying ? <Loader2 className="h-3 w-3 animate-spin" /> : (cooldown > 0 ? `Verify (${cooldown}s)` : "Verify")}
       </Button>
     );
   }
@@ -178,6 +177,15 @@ const CompanyDetails = () => {
     const cleanedValue = name === "shop_phone_number" ? value.replace(/[\s-]/g, "") : value;
     setFormData((prev) => ({ ...prev, [name]: cleanedValue }));
     setValidationErrors((prev) => ({ ...prev, [name]: "" }));
+
+    // Reset verification status in UI if value changes from original
+    if (name === 'shop_email') {
+      const isSame = cleanedValue.trim().toLowerCase() === (originalEmail || "").trim().toLowerCase();
+      setVerificationStatus(prev => ({ ...prev, email: isSame }));
+    } else if (name === 'shop_phone_number') {
+      const isSame = cleanedValue.trim() === (originalPhone || "").trim();
+      setVerificationStatus(prev => ({ ...prev, phone: isSame }));
+    }
   };
 
   const handleMemberTypeChange = (value) => {
@@ -824,7 +832,12 @@ const CompanyDetails = () => {
                             </div>
                             {otpError && <p className="text-[10px] text-red-500 mt-1">{otpError}</p>}
                             <div className="flex justify-between items-center mt-2">
-                              <button type="button" onClick={() => handleVerifyRequest('email')} disabled={countdown > 0} className="text-[10px] text-primary hover:underline font-medium cursor-pointer">
+                              <button 
+                                type="button" 
+                                onClick={() => handleVerifyRequest('email')} 
+                                disabled={countdown > 0 || isVerifying} 
+                                className="text-[10px] text-primary hover:underline font-medium cursor-pointer disabled:opacity-50"
+                              >
                                 {countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
                               </button>
                               <button type="button" onClick={() => setShowOtpSection(false)} className="text-[10px] text-gray-500 hover:text-gray-700 font-medium cursor-pointer">Cancel</button>
@@ -882,7 +895,12 @@ const CompanyDetails = () => {
                             </div>
                             {otpError && <p className="text-[10px] text-red-500 mt-1">{otpError}</p>}
                             <div className="flex justify-between items-center mt-2">
-                              <button type="button" onClick={() => handleVerifyRequest('phone')} disabled={countdown > 0} className="text-[10px] text-primary hover:underline font-medium cursor-pointer">
+                              <button 
+                                type="button" 
+                                onClick={() => handleVerifyRequest('phone')} 
+                                disabled={countdown > 0 || isVerifying} 
+                                className="text-[10px] text-primary hover:underline font-medium cursor-pointer disabled:opacity-50"
+                              >
                                 {countdown > 0 ? `Resend in ${countdown}s` : "Resend OTP"}
                               </button>
                               <button type="button" onClick={() => setShowOtpSection(false)} className="text-[10px] text-gray-500 hover:text-gray-700 font-medium cursor-pointer">Cancel</button>

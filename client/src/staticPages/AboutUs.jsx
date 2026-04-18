@@ -139,23 +139,19 @@ const AboutUs = () => {
       </div>
 
       {/* Contact Us Section */}
-      <div className="mt-10">
-        <h2 className="text-2xl font-bold mb-4">Contact Us</h2>
-        <div className="bg-gray-100 p-5 rounded-lg shadow-lg">
-          <p className="text-gray-700">
-            <strong>Email:</strong> <a href="mailto:hello@huntsworld.com" className="text-[#E33831]">hello@huntsworld.com</a>
-          </p>
-          <p className="text-gray-700">
-            <strong>Phone:</strong> +91-XXXXXXXXXX
-          </p>
-          <p className="text-gray-700 mt-4 font-semibold">
-            Ready to experience B2B commerce the way it should be? Join thousands of businesses already growing with Huntsworld.
-          </p>
-          <p className="text-gray-700 font-bold mt-2">
-            Grow Smart. Grow Together. Grow with Huntsworld.
-          </p>
-        </div>
+       <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4">Contact Information</h2>
+        <p className="text-gray-700">
+          <strong>Huntsworld</strong><br />
+          Registered Address: Address- 157,Thendral street, sudhana Nagar, Nainarmandabam, Puducherry,605004<br />
+          Email: <a href="mailto:mahalakshmi@huntsworld.com" className="text-[#E33831] hover:underline">mahalakshmi@huntsworld.com</a><br />
+          Support: <a href="mailto:contact@huntsworld.com" className="text-[#E33831] hover:underline">contact@huntsworld.com</a><br />
+          Phone: +91 9944810225, +91 9944355114<br />
+          Website: <a href="https://www.huntsworld.com" className="text-[#E33831] hover:underline">www.huntsworld.com</a><br />
+ 
+        </p>
       </div>
+
     </div>
   );
 };

@@ -5,7 +5,7 @@ const Product = require("../models/productModel");
 const Role = require('../models/roleModel'); 
 const ProductAttribute = require("../models/productAttributeModel");
 const assignFreePlan = require("../utils/assignFreePlan");
-const { getSyncVerificationFlags } = require("../utils/verificationSync");
+const { getSyncVerificationFlags, propagateVerificationReset } = require("../utils/verificationSync");
 
 exports.createServiceProvider = async (req, res) => {
     try {
@@ -182,12 +182,34 @@ exports.updateServiceProvider = async (req, res) => {
             });
         }
 
+        const oldEmail = serviceProvider.company_email;
+        const oldPhone = serviceProvider.company_phone_number;
+
         Object.assign(serviceProvider, req.body);
+
+        // Check for changes to reset verification
+        const newEmail = serviceProvider.company_email;
+        const newPhone = serviceProvider.company_phone_number;
+
+        if (newEmail && newEmail.trim().toLowerCase() !== oldEmail?.trim().toLowerCase()) {
+            serviceProvider.email_verified = false;
+            await propagateVerificationReset(serviceProvider.user_id, 'email');
+        }
+        if (newPhone && newPhone.trim() !== oldPhone?.trim()) {
+            serviceProvider.number_verified = false;
+            await propagateVerificationReset(serviceProvider.user_id, 'phone');
+        }
 
         // Cross-model verification sync on update
         const verificationFlags = await getSyncVerificationFlags(serviceProvider.user_id, serviceProvider.company_email, serviceProvider.company_phone_number);
-        serviceProvider.email_verified = verificationFlags.email_verified;
-        serviceProvider.number_verified = verificationFlags.number_verified;
+        
+        const updates = req.body;
+        if (!updates.company_email || updates.company_email.trim().toLowerCase() === oldEmail?.trim().toLowerCase()) {
+            serviceProvider.email_verified = verificationFlags.email_verified;
+        }
+        if (!updates.company_phone_number || updates.company_phone_number.trim() === oldPhone?.trim()) {
+            serviceProvider.number_verified = verificationFlags.number_verified;
+        }
 
         await serviceProvider.save();
 

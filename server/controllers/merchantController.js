@@ -17,7 +17,7 @@ const CompanyType = require('../models/companyTypeModel');
 const UserSubscription = require("../models/userSubscriptionPlanModel");
 const UserActiveFeature = require("../models/UserActiveFeature");
 const { checkDuplicates } = require("../utils/duplicateCheck");
-const { getSyncVerificationFlags } = require("../utils/verificationSync");
+const { getSyncVerificationFlags, propagateVerificationReset } = require("../utils/verificationSync");
 
 async function resolveCompanyType(companyTypeInput) {
   if (!companyTypeInput) return null;
@@ -482,7 +482,19 @@ exports.updateMerchant = async (req, res) => {
         }
 
         merchant.company_phone_number = normalizedPhone;
+        merchant.number_verified = false; // Reset on change
+        
+        // Propagate reset to all other profiles
+        await propagateVerificationReset(merchant.user_id, 'phone');
       }
+    }
+
+    // Email change reset
+    if (updates.company_email && updates.company_email.toLowerCase().trim() !== merchant.company_email?.toLowerCase().trim()) {
+      merchant.email_verified = false;
+      
+      // Propagate reset to all other profiles
+      await propagateVerificationReset(merchant.user_id, 'email');
     }
 
     // Handle company_type conversion
@@ -552,9 +564,16 @@ exports.updateMerchant = async (req, res) => {
     }
 
     // Cross-model verification sync on update
+    // Only pull sync flags if the value WAS NOT changed in this current request
     const verificationFlags = await getSyncVerificationFlags(merchant.user_id, merchant.company_email, merchant.company_phone_number);
-    merchant.email_verified = verificationFlags.email_verified;
-    merchant.number_verified = verificationFlags.number_verified;
+    
+    if (!updates.company_email || updates.company_email.toLowerCase().trim() === merchant.company_email?.toLowerCase().trim()) {
+      merchant.email_verified = verificationFlags.email_verified;
+    }
+    
+    if (!updates.company_phone_number || updates.company_phone_number.trim() === merchant.company_phone_number) {
+      merchant.number_verified = verificationFlags.number_verified;
+    }
 
     await merchant.save();
 

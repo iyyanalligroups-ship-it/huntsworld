@@ -32,6 +32,8 @@ module.exports = {
     BUY_LEADS: 'BUY_LEADS',
     NEW_USER: 'NEW_USER',
     TRUST_SEAL: 'TRUST_SEAL',
+    ADDING_OF_DEALERS: 'ADDING_OF_DEALERS',
+    PERSONAL_MANAGER: 'PERSONAL_MANAGER',
   },
 
   // 🔹 Subscription Statuses

@@ -56,19 +56,6 @@ exports.getCategories = async (req, res) => {
     const pipeline = [
       { $match: { category_name: { $regex: search, $options: "i" } } },
 
-      // Lookup subcategories for each category
-      {
-        $lookup: {
-          from: "subcategories",
-          localField: "_id",
-          foreignField: "category_id",
-          as: "subcategories",
-        },
-      },
-
-      // Only keep categories that have at least one subcategory
-      { $match: { "subcategories.0": { $exists: true } } },
-
       // Count products per category in one lookup
       {
         $lookup: {
@@ -84,47 +71,51 @@ exports.getCategories = async (req, res) => {
         },
       },
 
-      // Unwind subcategories so we can count products per sub
-      { $unwind: "$subcategories" },
-
-      // Count products per subcategory
+      // Lookup subcategories with a nested pipeline to resolve subProductCounts directly
       {
         $lookup: {
-          from: "products",
-          let: { subId: "$subcategories._id" },
+          from: "subcategories",
+          let: { catId: "$_id" },
           pipeline: [
-            { $match: { $expr: { $eq: ["$sub_category_id", "$$subId"] } } },
-            { $count: "count" },
+            { $match: { $expr: { $eq: ["$category_id", "$$catId"] } } },
+            {
+              $lookup: {
+                from: "products",
+                let: { subId: "$_id" },
+                pipeline: [
+                  { $match: { $expr: { $eq: ["$sub_category_id", "$$subId"] } } },
+                  { $count: "count" }
+                ],
+                as: "subProductCounts"
+              }
+            },
+            {
+              $addFields: {
+                productCount: {
+                  $ifNull: [{ $arrayElemAt: ["$subProductCounts.count", 0] }, 0]
+                }
+              }
+            },
+            {
+              $project: {
+                subCategoryId: "$_id",
+                subCategoryName: "$sub_category_name",
+                subCategoryImage: "$sub_category_image",
+                productCount: 1,
+                _id: 0
+              }
+            }
           ],
-          as: "subProductCounts",
-        },
-      },
-      {
-        $addFields: {
-          "subcategories.productCount": {
-            $ifNull: [{ $arrayElemAt: ["$subProductCounts.count", 0] }, 0],
-          },
+          as: "subcategories",
         },
       },
 
-      // Group back: reassemble subcategories under each category
       {
-        $group: {
-          _id: "$_id",
-          categoryId: { $first: "$_id" },
-          categoryName: { $first: "$category_name" },
-          categoryImage: { $first: "$category_image" },
-          productCount: { $first: "$productCount" },
-          createdAt: { $first: "$createdAt" },
-          subcategories: {
-            $push: {
-              subCategoryId: "$subcategories._id",
-              subCategoryName: "$subcategories.sub_category_name",
-              subCategoryImage: "$subcategories.sub_category_image",
-              productCount: "$subcategories.productCount",
-            },
-          },
-        },
+        $addFields: {
+          categoryId: "$_id",
+          categoryName: "$category_name",
+          categoryImage: "$category_image",
+        }
       },
 
       { $sort: { createdAt: -1 } },
@@ -1413,16 +1404,17 @@ exports.getProductsByCategoryName = async (req, res) => {
 
 exports.getTopTrendingCategories = async (req, res) => {
   try {
-    // Step 1: Get top trending categories
-    const topTrendingCategories = await TrendingPoints.aggregate([
-      // Group points by product_id
+    // 1. Fetch all Categories
+    const categories = await Category.find({}).lean();
+
+    // 2. Aggregate Trending Points per Category (so we can sort)
+    const trendingPoints = await TrendingPoints.aggregate([
       {
         $group: {
           _id: "$product_id",
           totalPoints: { $sum: "$trending_points" },
         },
       },
-      // Lookup product to get category_id
       {
         $lookup: {
           from: "products",
@@ -1432,138 +1424,72 @@ exports.getTopTrendingCategories = async (req, res) => {
         },
       },
       { $unwind: "$product" },
-      // Group by category_id
       {
         $group: {
           _id: "$product.category_id",
-          categoryPoints: { $sum: "$totalPoints" },
+          points: { $sum: "$totalPoints" },
         },
       },
-      // Lookup category details
-      {
-        $lookup: {
-          from: "categories",
-          localField: "_id",
-          foreignField: "_id",
-          as: "category",
-        },
-      },
-      { $unwind: "$category" },
-      // Sort and limit
-      { $sort: { categoryPoints: -1 } },
-      { $limit: 10 },
+    ]);
+    const pointsMap = new Map(trendingPoints.map((p) => [p._id.toString(), p.points]));
+
+    // 3. Fetch all SubCategories, SuperSubCategories, DeepSubCategories once for efficient mapping
+    const [allSubCategories, allSuperSubCategories, allDeepSubCategories] = await Promise.all([
+      SubCategory.find({}).select("_id category_id sub_category_name sub_category_image").lean(),
+      SuperSubCategory.find({}).select("_id sub_category_id super_sub_category_name").lean(),
+      DeepSubCategory.find({}).select("_id super_sub_category_id deep_sub_category_name").lean(),
     ]);
 
-    // Step 2: Fetch all subcategories and super-subcategories for "All Categories"
-    const allSubCategories = await SubCategory.find({}).select(
-      "_id category_id sub_category_name sub_category_image"
-    );
-    const allSuperSubCategories = await SuperSubCategory.find({}).select(
-      "_id sub_category_id super_sub_category_name"
-    );
-    const allDeepSubCategories = await DeepSubCategory.find({}).select(
-      "_id super_sub_category_id deep_sub_category_name"
-    );
+    // 4. Group data into Hierarchical Structure
+    const enhancedData = categories.map((cat) => {
+      const catId = cat._id.toString();
+      const catSubs = allSubCategories.filter((s) => s.category_id && s.category_id.toString() === catId);
 
-    // Step 3: Build "All Categories" entry with a default image
-    const allCategoriesEntry = {
-      categoryId: "all",
-      categoryName: "All Categories",
-      image: "https://via.placeholder.com/600x400?text=All+Categories",
-      categoryPoints: 0,
-      subCategories: allSubCategories.map((sub) => {
-        const superSubCategories = allSuperSubCategories
-          .filter(
-            (ssc) => ssc.sub_category_id.toString() === sub._id.toString()
-          )
-          .map((ssc) => ({
+      const subCategoriesMapped = catSubs.map((sub) => {
+        const subId = sub._id.toString();
+        const subSupers = allSuperSubCategories.filter(
+          (ss) => ss.sub_category_id && ss.sub_category_id.toString() === subId
+        );
+
+        const superSubMapped = subSupers.map((ssc) => {
+          const sscId = ssc._id.toString();
+          const sscDeeps = allDeepSubCategories.filter(
+            (dsc) => dsc.super_sub_category_id && dsc.super_sub_category_id.toString() === sscId
+          );
+
+          return {
             superSubCategoryId: ssc._id,
             name: ssc.super_sub_category_name,
-            deepSubCategories: allDeepSubCategories
-              .filter(
-                (dsc) =>
-                  dsc.super_sub_category_id.toString() === ssc._id.toString()
-              )
-              .map((dsc) => ({
-                deepSubCategoryId: dsc._id,
-                name: dsc.deep_sub_category_name,
-              })),
-          }));
+            deepSubCategories: sscDeeps.map((dsc) => ({
+              deepSubCategoryId: dsc._id,
+              name: dsc.deep_sub_category_name,
+            })),
+          };
+        });
 
         return {
           subCategoryId: sub._id,
           subCategoryName: sub.sub_category_name,
           subCategoryImage: sub.sub_category_image,
-          superSubCategories,
+          superSubCategories: superSubMapped,
         };
-      }),
-    };
+      });
 
-    // Step 4: Enhance top trending categories
-    const enhancedTrendingData = await Promise.all(
-      topTrendingCategories.map(async (item) => {
-        const category = {
-          categoryId: item.category._id,
-          categoryName: item.category.category_name,
-          image:
-            item.category.category_image ||
-            "https://via.placeholder.com/600x400?text=Category+Image",
-          categoryPoints: item.categoryPoints,
-        };
+      return {
+        categoryId: cat._id,
+        categoryName: cat.category_name,
+        image: cat.category_image || "https://via.placeholder.com/600x400?text=Category+Image",
+        categoryPoints: pointsMap.get(catId) || 0,
+        subCategories: subCategoriesMapped,
+      };
+    });
 
-        // Fetch sub-categories
-        const subCategories = await SubCategory.find({
-          category_id: item._id,
-        }).select("_id sub_category_name sub_category_image");
-
-        // Fetch super-sub-categories
-        const superSubCategories = await SuperSubCategory.find({
-          category_id: item._id,
-        }).select("_id sub_category_id super_sub_category_name");
-
-        // Fetch deep-sub-categories
-        const deepSubCategories = await DeepSubCategory.find({
-          category_id: item._id,
-        }).select("_id super_sub_category_id deep_sub_category_name");
-
-        category.subCategories = subCategories.map((sub) => {
-          const superSubCategoriesMapped = superSubCategories
-            .filter(
-              (ssc) => ssc.sub_category_id.toString() === sub._id.toString()
-            )
-            .map((ssc) => ({
-              superSubCategoryId: ssc._id,
-              name: ssc.super_sub_category_name,
-              deepSubCategories: deepSubCategories
-                .filter(
-                  (dsc) =>
-                    dsc.super_sub_category_id.toString() === ssc._id.toString()
-                )
-                .map((dsc) => ({
-                  deepSubCategoryId: dsc._id,
-                  name: dsc.deep_sub_category_name,
-                })),
-            }));
-
-          return {
-            subCategoryId: sub._id,
-            subCategoryName: sub.sub_category_name,
-            subCategoryImage: sub.sub_category_image,
-            superSubCategories: superSubCategoriesMapped,
-          };
-        });
-
-        return category;
-      })
-    );
-
-    // Step 5: Combine "All Categories" with top trending categories
-    const enhancedData = [allCategoriesEntry, ...enhancedTrendingData];
+    // 5. Sort by points (desc) then name (asc)
+    enhancedData.sort((a, b) => b.categoryPoints - a.categoryPoints || a.categoryName.localeCompare(b.categoryName));
 
     res.json({
       success: true,
-      message:
-        "Top trending categories with sub-categories and deep sub-categories fetched successfully",
+      message: "Fetched categories hierarchy successfully",
       data: enhancedData,
     });
   } catch (error) {

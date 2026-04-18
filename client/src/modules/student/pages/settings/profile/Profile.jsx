@@ -21,7 +21,8 @@ import {
   Users,
   Clock,
   Copy,
-  Check
+  Check,
+  Loader2,
 } from "lucide-react";
 import {
   Select,
@@ -38,14 +39,13 @@ import { AuthContext } from "@/modules/landing/context/AuthContext";
 import { validatePhoneNumber } from "@/modules/validation/phoneValidation";
 import Loader from "@/loader/Loader";
 
-const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) => {
-  if (isVerifying) return null;
+const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying, isLoading, cooldown }) => {
 
   if (isVerified && !isDirty) {
     return (
       <Badge
         variant="outline"
-        className="ml-2.5 text-[10px] uppercase tracking-wider font-bold px-2 py-0.5 rounded-full bg-green-50 text-green-700 border-green-200 shadow-sm"
+        className="ml-2.5 text-xs font-medium px-2.5 py-0.5 rounded-full bg-green-50 text-green-700 border-green-300"
       >
         Verified
       </Badge>
@@ -59,9 +59,10 @@ const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) =
         variant="outline"
         size="sm"
         onClick={onVerify}
-        className="ml-2 h-7 px-3 text-[10px] uppercase tracking-wider font-bold text-primary hover:bg-primary/5 border-primary/30 rounded-full"
+        disabled={isLoading || cooldown > 0}
+        className="ml-2 h-7 px-3 text-xs font-semibold text-primary hover:bg-primary/5 border-primary/30"
       >
-        Verify
+        {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : (cooldown > 0 ? `Verify (${cooldown}s)` : "Verify")}
       </Button>
     );
   }
@@ -92,19 +93,17 @@ const [copied, setCopied] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
 
-  // OTP States - Email
+  // OTP States
   const [showOtpSection, setShowOtpSection] = useState(false);
+  const [verificationType, setVerificationType] = useState(null); // 'email' or 'phone'
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState("");
 
-  // OTP States - Phone
-  const [showPhoneOtpSection, setShowPhoneOtpSection] = useState(false);
-  const [phoneOtp, setPhoneOtp] = useState("");
-  const [phoneOtpError, setPhoneOtpError] = useState("");
-
-  // Shared timer
   const [countdown, setCountdown] = useState(0);
   const [isResending, setIsResending] = useState(false);
+  const [emailVerifyCooldown, setEmailVerifyCooldown] = useState(0);
+  const [phoneVerifyCooldown, setPhoneVerifyCooldown] = useState(0);
+
   const [verificationStatus, setVerificationStatus] = useState({
     email: false,
     phone: false,
@@ -128,6 +127,26 @@ const [copied, setCopied] = useState(false);
       });
     }, 1000);
   };
+
+  useEffect(() => {
+    let timer;
+    if (emailVerifyCooldown > 0) {
+      timer = setInterval(() => {
+        setEmailVerifyCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [emailVerifyCooldown]);
+
+  useEffect(() => {
+    let timer;
+    if (phoneVerifyCooldown > 0) {
+      timer = setInterval(() => {
+        setPhoneVerifyCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [phoneVerifyCooldown]);
   const handleCopy = async () => {
     if (!userDetails?.user_code) return;
 
@@ -183,6 +202,16 @@ const [copied, setCopied] = useState(false);
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+
+    // Reset verification status in UI if value changes from original
+    if (name === "email") {
+      const isSame = value.trim().toLowerCase() === (originalEmail || "").trim().toLowerCase();
+      setVerificationStatus((prev) => ({ ...prev, email: isSame }));
+    }
+    if (name === "phone") {
+      const isSame = value.trim() === (originalPhone || "").trim();
+      setVerificationStatus((prev) => ({ ...prev, phone: isSame }));
+    }
 
     if (name === "phone") {
       const validation = validatePhoneNumber(value);
@@ -324,9 +353,11 @@ const [copied, setCopied] = useState(false);
 
         if (response.verifyPhone || phoneChanged) {
           setVerificationType("phone");
+          setPhoneVerifyCooldown(30);
           showToast(response.message || "Verification required for your phone number.", "info");
         } else if (response.verifyEmail || emailChanged) {
           setVerificationType("email");
+          setEmailVerifyCooldown(30);
           showToast(response.message || "Verification required for your email.", "info");
         }
         setUserDetails(response.user || userDetails);
@@ -391,7 +422,7 @@ const [copied, setCopied] = useState(false);
       const field = verificationType === "email" ? "email" : "phone";
       await updateUser({
         id: userId,
-        updatedUser: { [field]: formData[requiredField] },
+        updatedUser: { [field]: formData[field] },
       }).unwrap();
 
       showToast(`New OTP sent to ${field}!`, "success");
@@ -627,16 +658,22 @@ const [copied, setCopied] = useState(false);
                         value={safeFormData.email}
                         onChange={handleInputChange}
                         placeholder="e.g. student@example.com"
-                        className="border-2 border-slate-300 pl-10 h-10 shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                        className="border-2 border-slate-300 h-10 shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
                         required
                       />
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
                     <VerificationIndicator
                       isVerified={verificationStatus.email}
                       isDirty={safeFormData.email !== originalEmail}
-                      onVerify={handleSave}
+                      onVerify={() => {
+                        if (emailVerifyCooldown === 0) {
+                          setEmailVerifyCooldown(30);
+                          handleSave();
+                        }
+                      }}
                       isVerifying={showOtpSection && verificationType === "email"}
+                      isLoading={isUpdating}
+                      cooldown={emailVerifyCooldown}
                     />
                   </div>
                   {showOtpSection && verificationType === "email" && (
@@ -680,8 +717,15 @@ const [copied, setCopied] = useState(false);
                     <VerificationIndicator
                       isVerified={verificationStatus.phone}
                       isDirty={safeFormData.phone !== originalPhone}
-                      onVerify={handleSave}
+                      onVerify={() => {
+                        if (phoneVerifyCooldown === 0) {
+                          setPhoneVerifyCooldown(30);
+                          handleSave();
+                        }
+                      }}
                       isVerifying={showOtpSection && verificationType === "phone"}
+                      isLoading={isUpdating}
+                      cooldown={phoneVerifyCooldown}
                     />
                   </div>
                   {showOtpSection && verificationType === "phone" && (

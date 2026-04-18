@@ -1,8 +1,14 @@
-[{
-      "relation": ["delegate_permission/common.handle_all_urls"],
-      "target": {
-        "namespace": "android_app",
-        "package_name": "com.huntsworld.twa",
-        "sha256_cert_fingerprints": ["79:6D:F7:10:92:8D:30:7C:B4:97:D0:4B:D1:86:10:07:AE:97:8D:A9:BB:22:7A:41:8C:87:5A:2F:B4:A7:C8:8A"]
-      }
-    }]
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.huntsworld.app",
+      "sha256_cert_fingerprints": [
+        "C6:41:6A:29:AE:12:5B:A1:65:91:56:3F:24:AC:90:E2:08:B3:D6:B9:BB:E2:D9:7D:36:08:2D:04:98:B6:EF:AB"
+      ]
+    }
+  }
+]

@@ -15,6 +15,7 @@ import {
   useUploadProductImageMutation,
   useDeleteProductImageMutation,
 } from "@/redux/api/ProductImageApi";
+import { cn } from "@/lib/utils"
 import {
   useCreateProductMutation,
   useUpdateProductMutation,

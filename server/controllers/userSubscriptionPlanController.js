@@ -2370,8 +2370,10 @@ exports.verifyPayment = async (req, res) => {
 
         const isChat = (featureCode === FEATURES.CHAT_SYSTEM) || (!featureCode && featureName === "chat system");
         const isBuyLeads = (featureCode === FEATURES.BUY_LEADS) || (!featureCode && featureName === "buy leads");
+        const isDealers = (featureCode === FEATURES.ADDING_OF_DEALERS) || (!featureCode && featureName === "adding of dealers");
+        const isPersonalManager = (featureCode === FEATURES.PERSONAL_MANAGER) || (!featureCode && featureName === "personal manager");
 
-        if (isChat || isBuyLeads) continue;
+        if (isChat || isBuyLeads || isDealers || isPersonalManager) continue;
         if (!featureSnap.is_enabled) continue;
 
         const value = featureSnap.value;
@@ -2523,6 +2525,71 @@ exports.verifyPayment = async (req, res) => {
             });
           }
         }
+      }
+    }
+
+
+    /* =========================
+       🔹 ACTIVATE: ADDING OF DEALERS
+    ========================= */
+    const dealerFeature = await SubscriptionPlanElement.findOne({
+      $or: [
+        { feature_code: FEATURES.ADDING_OF_DEALERS },
+        { feature_name: { $regex: /^adding of dealers$/i } }
+      ]
+    });
+
+    if (dealerFeature) {
+      const mapping = await SubscriptionPlanElementMapping.findOne({
+        subscription_plan_id: subscription_plan_id,
+        feature_id: dealerFeature._id,
+        is_enabled: true
+      });
+
+      if (mapping && (mapping.value?.data === "enable" || mapping.value?.data === "free")) {
+        await UserActiveFeature.findOneAndUpdate(
+          { user_id, feature_code: FEATURES.ADDING_OF_DEALERS },
+          {
+            user_subscription_id: subscription._id,
+            feature_id: dealerFeature._id,
+            activated_at: now,
+            expires_at: subscription.end_date,
+            status: STATUS.ACTIVE
+          },
+          { upsert: true, new: true }
+        );
+      }
+    }
+
+    /* =========================
+       🔹 ACTIVATE: PERSONAL MANAGER
+    ========================= */
+    const managerFeature = await SubscriptionPlanElement.findOne({
+      $or: [
+        { feature_code: FEATURES.PERSONAL_MANAGER },
+        { feature_name: { $regex: /^personal manager$/i } }
+      ]
+    });
+
+    if (managerFeature) {
+      const mapping = await SubscriptionPlanElementMapping.findOne({
+        subscription_plan_id: subscription_plan_id,
+        feature_id: managerFeature._id,
+        is_enabled: true
+      });
+
+      if (mapping && (mapping.value?.data === "enable" || mapping.value?.data === "free")) {
+        await UserActiveFeature.findOneAndUpdate(
+          { user_id, feature_code: FEATURES.PERSONAL_MANAGER },
+          {
+            user_subscription_id: subscription._id,
+            feature_id: managerFeature._id,
+            activated_at: now,
+            expires_at: subscription.end_date,
+            status: STATUS.ACTIVE
+          },
+          { upsert: true, new: true }
+        );
       }
     }
 

@@ -3,7 +3,6 @@ import { useState, useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
 export default function ProductNameAutocomplete({ value, onChange }) {
-  const [search, setSearch] = useState(value || "");
   const [suggestions, setSuggestions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -14,10 +13,7 @@ export default function ProductNameAutocomplete({ value, onChange }) {
   // 1. Debounced fetch – runs when user types ≥ 3 chars
   // ------------------------------------------------------------------
   useEffect(() => {
-    // Sync internal search with external value (edit mode)
-    if (value !== search) setSearch(value || "");
-
-    if (!search || search.trim().length < 3) {
+    if (!value || value.trim().length < 3) {
       setSuggestions([]);
       setShowDropdown(false);
       return;
@@ -30,7 +26,7 @@ export default function ProductNameAutocomplete({ value, onChange }) {
       try {
         const res = await fetch(
           `${import.meta.env.VITE_API_URL}/products/suggest?q=${encodeURIComponent(
-            search.trim()
+            value.trim()
           )}`
         );
         const data = await res.json();
@@ -44,20 +40,17 @@ export default function ProductNameAutocomplete({ value, onChange }) {
     }, 300);
 
     return () => clearTimeout(debounceRef.current);
-  }, [search, value]);
+  }, [value]);
 
   // ------------------------------------------------------------------
   // 2. Handlers
   // ------------------------------------------------------------------
   const handleInputChange = (e) => {
     const val = e.target.value;
-    setSearch(val);
-    // keep parent form in sync
     onChange({ target: { name: "product_name", value: val, product: null } });
   };
 
   const handleSelect = (item) => {
-    setSearch(item.name);
     onChange({ target: { name: "product_name", value: item.name, product: item } });
     setShowDropdown(false);
     inputRef.current?.focus();
@@ -78,7 +71,7 @@ export default function ProductNameAutocomplete({ value, onChange }) {
         ref={inputRef}
         type="text"
         placeholder="Type product name..."
-        value={search}
+        value={value || ""}
         onChange={handleInputChange}
         onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
         onBlur={handleBlur}
@@ -109,7 +102,7 @@ export default function ProductNameAutocomplete({ value, onChange }) {
                   onClick={() => handleSelect(s)}
                   className={cn(
                     "cursor-pointer px-3 py-2 hover:bg-accent hover:text-accent-foreground",
-                    search === s.name && "bg-accent text-accent-foreground"
+                    value === s.name && "bg-accent text-accent-foreground"
                   )}
                 >
                   {s.name}

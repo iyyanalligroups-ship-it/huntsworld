@@ -29,6 +29,7 @@ const ContactUs = lazy(() => import("@/staticPages/ContactUs"));
 const PrivacyPolicy = lazy(() => import("@/staticPages/PrivacyPolicy"));
 const TermsConditions = lazy(() => import("@/staticPages/TermsConditions"));
 const AdvertiseWithUs = lazy(() => import("@/staticPages/AdvertiseWithUs"));
+const DeleteAccount = lazy(() => import("@/staticPages/DeleteAccountPage"));
 const ReferralRegister = lazy(() => import("./pages/ReferralRegister"));
 
 // category pages
@@ -110,6 +111,7 @@ export default function HomePageRoute() {
         <Route path="privacy-policy" element={withSuspense(PrivacyPolicy)} />
         <Route path="terms-condition" element={withSuspense(TermsConditions)} />
         <Route path="advertise-with-us" element={withSuspense(AdvertiseWithUs)} />
+        <Route path="delete-account" element={withSuspense(DeleteAccount)} />
         <Route path="referral-register" element={withSuspense(ReferralRegister)} />
         <Route path="referral-register/:referralCode" element={withSuspense(ReferralRegister)} />
 

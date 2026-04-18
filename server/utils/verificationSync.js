@@ -105,7 +105,42 @@ async function propagateVerificationChange(userId, identifier, type) {
   }
 }
 
+/**
+ * Resets verification status across all profiles for a given user.
+ * Called when an email or phone number is modified.
+ * @param {string} userId - The user ID.
+ * @param {string} type - 'email' or 'phone'.
+ */
+async function propagateVerificationReset(userId, type) {
+  if (!userId) return;
+
+  const resetFlag = type === 'email' ? { email_verified: false } : { number_verified: false };
+
+  try {
+    // 1. Reset Merchant
+    await Merchant.updateMany({ user_id: userId }, { $set: resetFlag });
+
+    // 2. Reset GrocerySeller
+    await GrocerySeller.updateMany({ user_id: userId }, { $set: resetFlag });
+
+    // 3. Reset ServiceProvider
+    await ServiceProvider.updateMany({ user_id: userId }, { $set: resetFlag });
+
+    // 4. Reset Student (Email only)
+    if (type === 'email') {
+      await Student.updateMany({ user_id: userId }, { $set: { email_verified: false } });
+    }
+
+    // 5. Reset User
+    await User.findByIdAndUpdate(userId, { $set: resetFlag });
+
+  } catch (err) {
+    console.error("Error in propagateVerificationReset:", err);
+  }
+}
+
 module.exports = {
   getSyncVerificationFlags,
-  propagateVerificationChange
+  propagateVerificationChange,
+  propagateVerificationReset
 };

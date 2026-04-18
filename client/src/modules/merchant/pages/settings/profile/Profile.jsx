@@ -21,6 +21,7 @@ import {
   Clock,
   Copy,
   Check,
+  Loader2,
 } from "lucide-react";
 import {
   Select,
@@ -44,8 +45,7 @@ import {
   useDeleteUserProfilePicMutation,
 } from "@/redux/api/UserprofilePicapi";
 
-const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) => {
-  if (isVerifying) return null; // Hide badge/button when OTP input is shown
+const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying, isLoading, cooldown }) => {
 
   if (isVerified && !isDirty) {
     return (
@@ -65,9 +65,10 @@ const VerificationIndicator = ({ isVerified, isDirty, onVerify, isVerifying }) =
         variant="outline"
         size="sm"
         onClick={onVerify}
+        disabled={isLoading || cooldown > 0}
         className="ml-2 h-7 px-3 text-xs font-semibold text-primary hover:bg-primary/5 border-primary/30"
       >
-        Verify
+        {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : (cooldown > 0 ? `Verify (${cooldown}s)` : "Verify")}
       </Button>
     );
   }
@@ -114,6 +115,8 @@ const Profile = ({ userId }) => {
   const [otpError, setOtpError] = useState("");
   const [countdown, setCountdown] = useState(0);
   const [isResending, setIsResending] = useState(false);
+  const [emailVerifyCooldown, setEmailVerifyCooldown] = useState(0);
+  const [phoneVerifyCooldown, setPhoneVerifyCooldown] = useState(0);
 
   const [fetchUserById, { isLoading, error }] = useLazyGetUserByIdQuery();
   const [updateUser, { isLoading: isUpdating }] = useUpdateUserMutation();
@@ -135,6 +138,26 @@ const Profile = ({ userId }) => {
       });
     }, 1000);
   };
+
+  useEffect(() => {
+    let timer;
+    if (emailVerifyCooldown > 0) {
+      timer = setInterval(() => {
+        setEmailVerifyCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [emailVerifyCooldown]);
+
+  useEffect(() => {
+    let timer;
+    if (phoneVerifyCooldown > 0) {
+      timer = setInterval(() => {
+        setPhoneVerifyCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [phoneVerifyCooldown]);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -188,12 +211,14 @@ const Profile = ({ userId }) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
 
-    // If email or phone is changed → mark as not verified until OTP is confirmed
-    if (name === "email" && value.trim() !== (originalEmail || "").trim()) {
-      setVerificationStatus((prev) => ({ ...prev, email: false }));
+    // If email or phone is changed → mark as not verified locally
+    if (name === "email") {
+      const isSame = value.trim().toLowerCase() === (originalEmail || "").trim().toLowerCase();
+      setVerificationStatus((prev) => ({ ...prev, email: isSame }));
     }
-    if (name === "phone" && value.trim() !== (originalPhone || "").trim()) {
-      setVerificationStatus((prev) => ({ ...prev, phone: false }));
+    if (name === "phone") {
+      const isSame = value.trim() === (originalPhone || "").trim();
+      setVerificationStatus((prev) => ({ ...prev, phone: isSame }));
     }
 
     if (name === "phone") {
@@ -333,9 +358,11 @@ const Profile = ({ userId }) => {
 
         if (response.verifyPhone) {
           setVerificationType("phone");
+          setPhoneVerifyCooldown(30);
           showToast("OTP sent to your new phone number.", "info");
         } else if (response.verifyEmail) {
           setVerificationType("email");
+          setEmailVerifyCooldown(30);
           showToast("OTP sent to your new email.", "info");
         }
         return;
@@ -715,15 +742,21 @@ const Profile = ({ userId }) => {
                         value={safeFormData.email}
                         onChange={handleInputChange}
                         placeholder="your.email@example.com"
-                        className="pl-10 h-10 border-2 border-slate-300 shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
+                        className="h-10 border-2 border-slate-300 shadow-sm transition-all focus:ring-2 focus:ring-primary/20"
                       />
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     </div>
                     <VerificationIndicator
                       isVerified={verificationStatus.email}
                       isDirty={safeFormData.email !== originalEmail}
-                      onVerify={handleSave}
+                      onVerify={() => {
+                        if (emailVerifyCooldown === 0) {
+                          setEmailVerifyCooldown(30);
+                          handleSave();
+                        }
+                      }}
                       isVerifying={showOtpSection && verificationType === "email"}
+                      isLoading={isUpdating}
+                      cooldown={emailVerifyCooldown}
                     />
                   </div>
                   {showOtpSection && verificationType === "email" && (
@@ -769,8 +802,15 @@ const Profile = ({ userId }) => {
                     <VerificationIndicator
                       isVerified={verificationStatus.phone}
                       isDirty={safeFormData.phone !== originalPhone}
-                      onVerify={handleSave}
+                      onVerify={() => {
+                        if (phoneVerifyCooldown === 0) {
+                          setPhoneVerifyCooldown(30);
+                          handleSave();
+                        }
+                      }}
                       isVerifying={showOtpSection && verificationType === "phone"}
+                      isLoading={isUpdating}
+                      cooldown={phoneVerifyCooldown}
                     />
                   </div>
                   {phoneError && <p className="text-sm text-red-500 mt-1">{phoneError}</p>}
