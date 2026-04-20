@@ -185,7 +185,7 @@ export default function HeaderDesktop() {
                         </AvatarFallback>
                       </Avatar>
                       <span className="text-[12px] lg:text-sm flex items-center">
-                        <span className="hidden xl:inline mr-1">Welcome,</span>
+                        <span className="hidden xl:inline mr-1">Welcome, to</span>
                         <span className="max-w-[70px] md:max-w-[100px] lg:max-w-[140px] truncate font-medium">
                           {displayName || "User"}
                         </span>
