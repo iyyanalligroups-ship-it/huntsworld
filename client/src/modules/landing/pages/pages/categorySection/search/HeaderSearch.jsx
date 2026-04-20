@@ -200,9 +200,7 @@ const HeaderSearch = () => {
   return (
     <div className="w-full max-w-5xl mx-auto z-50">
 
-      {/* ==========================================
-          MOBILE VIEW TRIGGER (Visible < 1024px)
-          ========================================== */}
+
       <div className="lg:hidden w-full px-2">
         <Dialog open={isMobileModalOpen} onOpenChange={setIsMobileModalOpen}>
           <DialogTrigger asChild>

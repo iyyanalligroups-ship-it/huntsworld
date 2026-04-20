@@ -135,9 +135,7 @@ const { data, isLoading, isFetching, isError, error, refetch } = useGetBuyLeadsQ
               <Button onClick={() => navigate('/merchant/plans/subscription')} className="bg-[#0c1f4d] hover:bg-[#152c63] px-8">
                 View Subscription Plans
               </Button>
-              {/* <Button variant="outline" onClick={() => navigate(-1)}>
-                Go Back
-              </Button> */}
+
             </div>
           ) : (
             <Button onClick={handleRetry} variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">

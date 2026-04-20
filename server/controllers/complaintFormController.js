@@ -6,34 +6,6 @@ const Message = require("../models/messageModel")
 const Role = require("../models/roleModel");
 
 // Create Complaint
-// exports.createComplaint = async (req, res) => {
-//   try {
-//     const { type, option, user_id, details } = req.body;
-
-//      // To log and inspect the incoming data
-
-//     if (!type || !option || !user_id) {
-//       return res.status(400).json({ message: "Missing required fields" });
-//     }
-
-//     // Assuming 'details' is a nested object that is directly sent in JSON format
-//     if (!details || typeof details !== "object") {
-//       return res.status(400).json({ message: "Invalid details format" });
-//     }
-
-//     const complaint = new Complaint({ type, option, user_id, details });
-//     await complaint.save();
-
-//     res
-//       .status(201)
-//       .json({ message: "Complaint created successfully", complaint });
-//   } catch (err) {
-//     console.error("Error creating complaint:", err);
-//     res
-//       .status(500)
-//       .json({ message: "Error creating complaint", error: err.message });
-//   }
-// };
 // 1. CREATE COMPLAINT + NOTIFICATION
 exports.createComplaint = async (req, res) => {
   try {

@@ -73,8 +73,6 @@ function CompanyDetails() {
     company_video: '',
     domain_name: '',
   });
-  const [companyVideoEnabled, setCompanyVideoEnabled] = useState(false);
-
   const [showOtpSection, setShowOtpSection] = useState(false);
   const [verificationType, setVerificationType] = useState(null); // 'email' or 'phone'
   const [otp, setOtp] = useState("");
@@ -105,21 +103,7 @@ function CompanyDetails() {
     }
   }, [user]);
 
-  useEffect(() => {
-    const checkVideoAccess = async () => {
-      try {
-        const res = await axios.post(
-          `${import.meta.env.VITE_API_URL}/products/company-video-access`,
-          { user_id: user?.user?._id }
-        );
-        setCompanyVideoEnabled(res.data.company_video || false);
-      } catch (err) {
-        console.error("Error checking video access:", err);
-      }
-    };
 
-    if (user?.user?._id) checkVideoAccess();
-  }, [user]);
 
   const normalizeMerchantData = (data) => {
     if (!data) return data;
@@ -205,6 +189,15 @@ function CompanyDetails() {
     return { isValid: true, errorMessage: '' };
   };
 
+  const validateUrl = (value) => {
+    if (!value) return { isValid: true, errorMessage: '' };
+    const urlRegex = /^(https?:\/\/)[^\s$.?#].[^\s]*$/i;
+    if (!urlRegex.test(value)) {
+      return { isValid: false, errorMessage: 'Please enter a valid URL starting with http:// or https://' };
+    }
+    return { isValid: true, errorMessage: '' };
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -226,6 +219,8 @@ function CompanyDetails() {
       validationResult = validateAadhar(value);
     } else if (name === 'domain_name' && value.trim()) {
       validationResult = validateDomain(value.trim());
+    } else if (name === 'company_video' && value.trim()) {
+      validationResult = validateUrl(value.trim());
     }
 
     setValidationErrors((prev) => ({
@@ -460,6 +455,7 @@ function CompanyDetails() {
     let phoneValidation = { isValid: true, errorMessage: '' };
     let aadharValidation = { isValid: true, errorMessage: '' };
     let domainValidation = validateDomain(formData.domain_name || '');
+    let videoValidation = validateUrl(formData.company_video || '');
 
     if (formData.gst_number) {
       gstValidation = validateGST(formData.gst_number);
@@ -489,7 +485,7 @@ function CompanyDetails() {
       company_phone_number: phoneValidation.errorMessage,
       aadhar_number: aadharValidation.errorMessage,
       domain_name: domainValidation.errorMessage,
-      company_video: '',
+      company_video: videoValidation.errorMessage,
     });
 
     if (
@@ -500,7 +496,8 @@ function CompanyDetails() {
       !descriptionValidation.isValid ||
       !phoneValidation.isValid ||
       !aadharValidation.isValid ||
-      !domainValidation.isValid
+      !domainValidation.isValid ||
+      !videoValidation.isValid
     ) {
       setError('Please fix validation errors for provided fields before saving');
       setLoading(false);
@@ -878,12 +875,8 @@ function CompanyDetails() {
                     id="company_video"
                     name="company_video"
                     value={formData.company_video || ''}
-                    disabled={!companyVideoEnabled}
-                    placeholder={
-                      companyVideoEnabled
-                        ? "Enter YouTube or Video URL"
-                        : "Upgrade plan to enable video"
-                    }
+                    disabled={false}
+                    placeholder="Enter YouTube or Video URL (https://...)"
                     onChange={handleInputChange}
                     className={`mt-1 text-sm sm:text-base border-2 border-slate-300 ${validationErrors.company_video ? 'border-red-500' : ''}`}
                   />

@@ -113,7 +113,6 @@ const AdminTrustSealPlanManagement = ({ targetUser, hasSubscription, trustSealRe
     setIsDialogOpen(true);
   };
 
-  // Map status to badge variants and icons
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
       case 'verified':

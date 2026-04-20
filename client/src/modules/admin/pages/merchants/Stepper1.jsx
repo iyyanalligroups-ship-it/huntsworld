@@ -7,7 +7,6 @@ import axios from "axios";
 const Stepper1 = ({ formData, setFormData, error, setError, loading, setLoading, handleNext, handleCancel }) => {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Validate and determine the type of search query
   const validateSearchQuery = (query) => {
     if (!query.trim()) {
       setError("Please enter a name, email, or phone number to search.");
@@ -38,22 +37,19 @@ const Stepper1 = ({ formData, setFormData, error, setError, loading, setLoading,
     setFormData((prev) => ({ ...prev, isSearched: false }));
 
     try {
-      // Construct API params based on query type
+
       const params = { [validatedQuery.type]: validatedQuery.value };
       console.log("Sending API request with params:", params);
       const response = await axios.get(`${import.meta.env.VITE_API_URL}/users/lookup`, { params });
 
       console.log("API response:", JSON.stringify(response.data, null, 2));
 
-      // Check if response data is valid
       if (!response.data || !response.data.success || !Array.isArray(response.data.users)) {
         throw new Error("Invalid API response: no users found or incorrect format.");
       }
-
-      // Get the first user from the response
       const user = response.data.users[0];
 
-      // Validate required fields
+
       const missingFields = [];
       if (!user.user_id) missingFields.push("user_id");
       if (!user.name) missingFields.push("name");
@@ -64,7 +60,6 @@ const Stepper1 = ({ formData, setFormData, error, setError, loading, setLoading,
         throw new Error(`Incomplete user data: missing ${missingFields.join(", ")}.`);
       }
 
-      // Update formData with fetched data
       const updatedFormData = {
         ...formData,
         user_id: user.user_id,

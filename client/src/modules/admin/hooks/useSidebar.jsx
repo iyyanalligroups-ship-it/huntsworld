@@ -1,5 +1,5 @@
 import { useContext } from 'react';
-import { SidebarContext } from '../context/SidebarContext'; // Adjust path as necessary
+import { SidebarContext } from '../context/SidebarContext';
 
 // Custom hook for using the Sidebar context
 export const useSidebar = () => {

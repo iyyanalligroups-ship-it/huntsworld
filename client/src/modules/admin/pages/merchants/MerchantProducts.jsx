@@ -41,7 +41,7 @@ const MerchantProducts = () => {
       const res = await fetchMerchant({email}).unwrap();
         console.log(res,'seeleted');
         
-      // Check if success is true and merchant exists
+   
       if (res.success && res.merchant) {
         setSelectedMerchant(res?.merchant);
         setMerchantProducts(res?.products || []);
@@ -51,7 +51,7 @@ const MerchantProducts = () => {
         setEmail("");
         toast.success("Fetched merchant successfully");
       } else {
-        // If backend returns message without success
+      
         setSelectedMerchant(null);
         setShowForm(false);
         setError(res.message || "Merchant not found");
@@ -127,14 +127,13 @@ const MerchantProducts = () => {
           </Card>
         )}
 
-        {/* Product Form */}
+   
         {showForm && <MerchantProductForm editingProduct={editingProduct} />}
       </div>
 
-      {/* Divider for desktop only */}
+
       <div className="hidden lg:block w-px bg-gray-300"></div>
 
-      {/* Right Panel */}
       {showForm && (
         <div className="w-full lg:w-1/2">
           <MerchantProductListing

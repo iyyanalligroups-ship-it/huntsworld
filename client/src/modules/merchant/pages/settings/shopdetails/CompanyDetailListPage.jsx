@@ -3,7 +3,7 @@ import {
   Mail, Phone, Building2, Calendar, Users,
   FileText, ShieldCheck, BadgeCheck, Info,
   Image as ImageIcon, CreditCard, Fingerprint,
-  Copy, CheckCircle2, Factory, MapPin, Globe
+  Copy, CheckCircle2, Factory, MapPin, Globe, Video
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -184,6 +184,27 @@ const CompanyDetailListPage = ({ merchantData, noImage }) => {
                       className="text-sm font-bold text-emerald-700 hover:underline break-all"
                     >
                       {merchantData.domain_name}
+                    </a>
+                  ) : (
+                    <p className="text-sm font-bold text-slate-400">Not Provided</p>
+                  )}
+                </div>
+              </div>
+              <Separator />
+              <div className="flex items-start gap-4">
+                <div className="p-2 bg-red-50 rounded-lg text-red-600 shrink-0 mt-1">
+                  <Video size={18} />
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-400">Company Video</p>
+                  {merchantData.company_video ? (
+                    <a
+                      href={merchantData.company_video}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-bold text-red-700 hover:underline break-all"
+                    >
+                      View Video Link
                     </a>
                   ) : (
                     <p className="text-sm font-bold text-slate-400">Not Provided</p>

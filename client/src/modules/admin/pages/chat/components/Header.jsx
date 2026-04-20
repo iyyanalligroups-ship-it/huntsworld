@@ -39,11 +39,7 @@ export default function Header({ onMenuClick }) {
   const { user } = useContext(AuthContext);
   const { onlineUsers, lastSeenMap } = useSocket();
   const navigate = useNavigate();
-
-  // Consolidated logged-in user ID with fallbacks for flat/nested structures and id/_id naming
   const loggedInUserId = user?.user?._id || user?.user?.id || user?._id || user?.id;
-
-  // === NEW: Custom menu & modal states ===
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isReportOpen, setIsReportOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -53,7 +49,6 @@ export default function Header({ onMenuClick }) {
   const menuRef = useRef(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Close menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -92,7 +87,7 @@ export default function Header({ onMenuClick }) {
     navigate(-1);
   };
 
-  // === NEW: File & Submit Handlers ===
+  
   const handleFileChange = (e) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files));
@@ -437,7 +432,6 @@ export default function Header({ onMenuClick }) {
           <span className="hidden sm:inline text-xs font-bold uppercase tracking-wider">Back</span>
         </Button>
 
-        {/* === NEW: Custom MoreVertical Menu === */}
         <div className="relative" ref={menuRef}>
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}

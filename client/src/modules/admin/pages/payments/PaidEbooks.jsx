@@ -41,32 +41,30 @@ const PaidEbooks = () => {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeEbookPayment, setActiveEbookPayment] = useState(null);
   const [page, setPage] = useState(1);
-  const limit = 5; // Match backend default limit
+  const limit = 5; 
 
   const { data: citiesData, refetch: refetchCities } = useGetUniqueCitiesQuery();
   const cities = citiesData?.data || [];
 
-  // Debounce search input (1 second = 1000ms)
+
   useEffect(() => {
     const handler = setTimeout(() => {
-      console.log('Debounced search value:', searchInput); // Debug log
+      console.log('Debounced search value:', searchInput); 
       setDebouncedSearch(searchInput);
     }, 1000);
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // Search seller by email or phone
   const { data: searchResults, isLoading: isSearchLoading, error: searchError } = useGetUserBySearchQuery(debouncedSearch, {
-    skip: !debouncedSearch || debouncedSearch.length < 3, // Skip if search is too short
+    skip: !debouncedSearch || debouncedSearch.length < 3,
   });
 
-  // Debug search results
+
   useEffect(() => {
     console.log('Search results:', searchResults);
     console.log('Search error:', searchError);
   }, [searchResults, searchError]);
 
-  // Fetch active e-book payment for selected seller
   const { data: subscriptionData } = useCheckUserSubscriptionQuery(selectedSeller?._id, {
     skip: !selectedSeller?._id,
   });
@@ -79,15 +77,14 @@ const PaidEbooks = () => {
     }
   }, [searchResults]);
 
-  // Fetch all active e-book purchases with pagination
   const { data: activeEbookPayments, isLoading: isEbookPaymentsLoading, refetch: refetchEbookPayments } = useGetAllActiveEbookPaymentsQuery({ page, limit });
 
-  // Extract pagination metadata
+
   const payments = activeEbookPayments?.data || [];
   const pagination = activeEbookPayments?.pagination || {};
   const { total = 0, totalPages = 1, hasNextPage, hasPrevPage } = pagination;
 
-  // Handle city selection
+
   const handleAddCity = () => {
     if (currentCity && !selectedCities.includes(currentCity)) {
       setSelectedCities([...selectedCities, currentCity]);
@@ -95,13 +92,13 @@ const PaidEbooks = () => {
     }
   };
 
-  // Handle component refresh
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      // Refetch data
+ 
       await Promise.all([refetchEbookPayments(), refetchCities()]);
-      // Reset component state
+  
       setSearchInput('');
       setDebouncedSearch('');
       setSelectedSeller(null);
@@ -111,7 +108,7 @@ const PaidEbooks = () => {
       setIsPurchaseModalOpen(false);
       setIsUpgradeModalOpen(false);
       setIsCancelDialogOpen(false);
-      setPage(1); // Reset to first page
+      setPage(1); 
     } catch (error) {
       console.error('Refresh error:', error);
       showToast('Failed to refresh e-book data', 'error');
@@ -120,7 +117,7 @@ const PaidEbooks = () => {
     }
   };
 
-  // Handle purchase or upgrade
+
   const handlePurchase = async (isUpgrade = false, oldEbookPaymentId = null) => {
     try {
       if (!selectedCities.length) throw new Error('Please select at least one city');
@@ -136,7 +133,7 @@ const PaidEbooks = () => {
         throw new Error('Failed to load Razorpay script');
       }
 
-      // Fetch price per city
+
       const res = await fetch(`${import.meta.env.VITE_API_URL}/common-subscription-plan/ebook-plans`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
@@ -198,7 +195,7 @@ const PaidEbooks = () => {
               showToast(`${isUpgrade ? 'Upgraded' : 'Purchased'} ebook for ${selectedCities.join(', ')}`, 'success');
               setActiveEbookPayment(verifyData.ebookPayment);
               setSelectedCities([]);
-              setPage(1); // Reset to first page after purchase
+              setPage(1);
               await refetchEbookPayments();
             } else {
               showToast('Payment verification failed', 'error');
@@ -234,7 +231,7 @@ const PaidEbooks = () => {
     }
   };
 
-  // Handle cancel
+
   const handleCancel = async (ebookPaymentId) => {
     try {
       if (!ebookPaymentId) throw new Error('No e-book payment ID provided');
@@ -251,7 +248,7 @@ const PaidEbooks = () => {
       if (response.ok) {
         showToast('E-book subscription cancelled successfully', 'success');
         setActiveEbookPayment(null);
-        setPage(1); // Reset to first page after cancellation
+        setPage(1); 
         await refetchEbookPayments();
       } else {
         throw new Error('Failed to cancel e-book');
@@ -279,13 +276,13 @@ const PaidEbooks = () => {
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  // Decide badge style based on price ranges
+
   const priceBadgeVariant = (amount) => {
     const a = Number(amount) || 0;
-    if (a >= 100 && a <= 999) return "bg-emerald-100 text-emerald-700"; // low
-    if (a >= 1000 && a <= 2999) return "bg-amber-100 text-amber-700"; // mid
-    if (a >= 3000) return "bg-rose-100 text-rose-700"; // high
-    return "bg-slate-100 text-slate-700"; // default
+    if (a >= 100 && a <= 999) return "bg-emerald-100 text-emerald-700"; 
+    if (a >= 1000 && a <= 2999) return "bg-amber-100 text-amber-700";
+    if (a >= 3000) return "bg-rose-100 text-rose-700";
+    return "bg-slate-100 text-slate-700";
   };
 
   return (
@@ -303,7 +300,6 @@ const PaidEbooks = () => {
           </Button>
         </div>
 
-        {/* Search Input */}
         <div className="mb-6">
           <Label htmlFor="searchInput" className="text-gray-700">Search Seller by Email or Phone</Label>
           <div className="relative w-full">
@@ -347,7 +343,7 @@ const PaidEbooks = () => {
           )}
         </div>
 
-        {/* Action Buttons */}
+
         {selectedSeller && (
           <div className="flex space-x-4 mb-6">
             <Button
@@ -381,7 +377,6 @@ const PaidEbooks = () => {
           </div>
         )}
 
-        {/* Purchase Modal */}
         <Dialog open={isPurchaseModalOpen} onOpenChange={setIsPurchaseModalOpen}>
           <DialogContent>
             <DialogHeader>
@@ -429,7 +424,6 @@ const PaidEbooks = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Upgrade Modal */}
         <Dialog open={isUpgradeModalOpen} onOpenChange={setIsUpgradeModalOpen}>
           <DialogContent>
             <DialogHeader>
@@ -477,7 +471,7 @@ const PaidEbooks = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Cancel Confirmation Dialog */}
+
         <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -495,7 +489,7 @@ const PaidEbooks = () => {
           </DialogContent>
         </Dialog>
 
-        {/* Active E-Book Purchases Table */}
+    
         {isEbookPaymentsLoading ? (
           <p>Loading e-book purchases...</p>
         ) : payments.length > 0 ? (
@@ -596,12 +590,12 @@ const PaidEbooks = () => {
                 ))}
               </TableBody>
             </Table>
-            {/* Pagination */}
+
             {totalPages > 1 && (
               <div className="mt-6 flex justify-end">
                 <Pagination>
                   <PaginationContent>
-                    {/* Previous */}
+                
                     <PaginationItem>
                       <PaginationPrevious
                         href="#"
@@ -612,7 +606,7 @@ const PaidEbooks = () => {
                         className={!hasPrevPage ? "pointer-events-none opacity-50" : ""}
                       />
                     </PaginationItem>
-                    {/* Page numbers */}
+               
                     {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                       <PaginationItem key={pageNum}>
                         <PaginationLink
@@ -627,13 +621,13 @@ const PaidEbooks = () => {
                         </PaginationLink>
                       </PaginationItem>
                     ))}
-                    {/* Ellipsis for large page counts */}
+                   
                     {totalPages > 5 && page < totalPages - 2 && (
                       <PaginationItem>
                         <PaginationEllipsis />
                       </PaginationItem>
                     )}
-                    {/* Next */}
+               
                     <PaginationItem>
                       <PaginationNext
                         href="#"

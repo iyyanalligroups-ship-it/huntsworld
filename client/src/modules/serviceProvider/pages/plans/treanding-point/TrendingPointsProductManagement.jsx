@@ -243,22 +243,8 @@ const TrendingPointsProductManagement = ({ user, subscriptionId, activeTrendingP
                     <TableCell>{tp.trending_points}</TableCell>
                     <TableCell>{tp.last_updated_date || 'N/A'}</TableCell>
                     <TableCell className="flex gap-2">
-                      {/* <Button
-                        className="bg-[#0c1f4d] text-white cursor-pointer hover:bg-[#183e96]"
-                        onClick={() => handleUpdateTrendingPoints(tp)}
-                      >
-                        <TrendingUp className="w-4 h-4" />
-                        Update
-                      </Button> */}
-                      {/* <Button
-                        className="bg-red-600 text-white hover:bg-red-700"
-                        onClick={() => {
-                          setSelectedTrendingPointsId(tp._id);
-                          setIsDeleteConfirmOpen(true);
-                        }}
-                      >
-                        Delete
-                      </Button> */}
+
+
                     </TableCell>
                   </TableRow>
                 ))}

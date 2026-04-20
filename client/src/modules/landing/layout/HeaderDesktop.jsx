@@ -166,9 +166,9 @@ export default function HeaderDesktop() {
 
   return (
     <header className="flex flex-col w-full z-50 bg-white shadow-md shrink-0">
-      <div className={`text-white bg-white flex ${user?.user?._id ? 'justify-center' : 'justify-evenly'} gap-5 items-center p-1 border-b`}>
+      <div className="relative z-20 text-white bg-white flex justify-between items-center px-1 md:px-2 lg:px-4 xl:px-10 gap-1 lg:gap-2 p-1 border-b">
         {/* Left: Welcome User / Login & Join Free */}
-        <div className="flex items-center gap-10">
+        <div className="flex items-center gap-4">
           {user ? (
             <>
               <NavigationMenu>
@@ -184,10 +184,13 @@ export default function HeaderDesktop() {
                           <UserCircle className="w-8 h-8" />
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm">
-                        Welcome, {displayName || "User"}
+                      <span className="text-[12px] lg:text-sm flex items-center">
+                        <span className="hidden xl:inline mr-1">Welcome,</span>
+                        <span className="max-w-[70px] md:max-w-[100px] lg:max-w-[140px] truncate font-medium">
+                          {displayName || "User"}
+                        </span>
                         {role && (
-                          <span className="ml-1 text-gray-500">
+                          <span className="ml-1 text-gray-500 hidden md:inline">
                             (
                             {role.toLowerCase() === "grocery_seller"
                               ? "Base_member"
@@ -251,8 +254,8 @@ export default function HeaderDesktop() {
                 </NavigationMenuList>
               </NavigationMenu>
 
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <Eye className="w-4 h-4 text-[#e03733]" />
+              <div className="flex items-center gap-1 text-[11px] lg:text-sm text-muted-foreground whitespace-nowrap">
+                <Eye className="size-3 lg:size-4 text-[#e03733]" />
                 <span>{points} Views</span>
               </div>
 
@@ -277,10 +280,10 @@ export default function HeaderDesktop() {
         </div>
 
         {/* Center: Phone Numbers */}
-        <div className="hidden lg:flex items-center gap-2 ">
-          <div className="hidden lg:flex items-center gap-2 text-center bg-gray-100 p-2 rounded-2xl">
-            <PhoneCall className="w-5 h-5 text-yellow-400" />
-            <p className="text-sm text-[#1C1B1F]">
+        <div className="flex items-center gap-1 lg:gap-2">
+          <div className="flex items-center gap-1 lg:gap-2 text-center bg-gray-100 p-1 lg:p-2 rounded-2xl">
+            <PhoneCall className="size-3 lg:size-5 text-yellow-400" />
+            <p className="text-[10px] lg:text-sm text-[#1C1B1F]">
               {contactNumbers.map((contact, index) => (
                 <span key={index}>
                   <a href={contact.href} className="hover:underline">
@@ -295,7 +298,7 @@ export default function HeaderDesktop() {
         </div>
 
         {/* Right: Navigation Menus */}
-        <div className="flex items-center gap-4 text-[#1C1B1F]">
+        <div className="flex items-center gap-2 text-[#1C1B1F]">
           {role === "USER" && (
             <NavigationMenu>
               <NavigationMenuList>
@@ -468,13 +471,13 @@ export default function HeaderDesktop() {
             </DialogContent>
           </Dialog>
 
-          <NavigationMenu>
-            <NavigationMenuList>
+          <NavigationMenu viewport={false} className="z-50">
+            <NavigationMenuList className="relative">
               <NavigationMenuItem>
-                <NavigationMenuTrigger className="bg-white text-[#1C1B1F]">
+                <NavigationMenuTrigger className="bg-white text-[#1C1B1F] px-2 lg:px-4 h-8 lg:h-9">
                   Help
                 </NavigationMenuTrigger>
-                <NavigationMenuContent className="mr-6">
+                <NavigationMenuContent className="!left-auto !right-0 !origin-top-right z-[100] shadow-xl">
                   <ul className="grid gap-2 w-[200px] p-4 ">
                     {helpOptions.map((option, index) => {
                       const Icon =
@@ -502,7 +505,7 @@ export default function HeaderDesktop() {
       </div>
 
       <motion.div
-        className="flex items-center justify-between bg-[#0c1f4d] py-4 px-4"
+        className="relative z-10 flex items-center justify-between bg-[#0c1f4d] py-4 px-4"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}

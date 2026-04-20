@@ -12,11 +12,11 @@ const EntityProfile = ({ profile, entityType }) => {
   let name = "";
   let logo = "";
   let verified = false;
-  let subText = ""; // Highlighted sub-text
-  let Icon = Store; // Default icon
-  let themeColor = "text-blue-600 bg-blue-50"; // Default theme
+  let subText = "";
+  let Icon = Store; 
+  let themeColor = "text-blue-600 bg-blue-50"; 
 
-  // Logic mapping for different entities
+
   if (entityType === "GrocerySeller") {
     name = profile?.shop_name;
     logo = profile?.company_logo;
@@ -48,7 +48,7 @@ const EntityProfile = ({ profile, entityType }) => {
   return (
     <div className="group relative flex items-start gap-4 p-5 border border-slate-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-all duration-200">
       
-      {/* Avatar Section with Status Ring */}
+     
       <div className="relative">
         <Avatar className="h-14 w-14 border-2 border-white shadow-sm">
           {logo && !imgError && (
@@ -58,7 +58,7 @@ const EntityProfile = ({ profile, entityType }) => {
             {firstLetter}
           </AvatarFallback>
         </Avatar>
-        {/* Entity Type Floating Icon */}
+    
         <div className={`absolute -bottom-1 -right-1 p-1 rounded-full border-2 border-white ${themeColor}`}>
           <Icon size={12} />
         </div>
@@ -83,12 +83,12 @@ const EntityProfile = ({ profile, entityType }) => {
           )}
         </div>
 
-        {/* Highlighted Subtext */}
+
         <p className={`text-sm font-medium mt-0.5 ${themeColor.split(' ')[0]}`}>
           {subText}
         </p>
 
-        {/* Extra Info for Students (Date Range) */}
+ 
         {entityType === "Student" && (
           <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-slate-400 uppercase tracking-wider">
             <span>{new Date(profile?.college_start_month_year).getFullYear()}</span>
@@ -97,7 +97,7 @@ const EntityProfile = ({ profile, entityType }) => {
           </div>
         )}
 
-        {/* Badge for Verification Status */}
+
         {verified && (
           <Badge variant="secondary" className="w-fit mt-3 bg-blue-50 text-blue-700 border-blue-100 px-2 py-0">
             Official Account

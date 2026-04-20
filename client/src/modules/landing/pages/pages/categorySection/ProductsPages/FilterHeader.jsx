@@ -120,18 +120,7 @@ const FilterHeader = ({
       </div>
 
       {/* 4. 📍 Near Me Toggle */}
-      {/* <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100 self-end h-11">
-        <Checkbox
-          id="nearMe"
-          checked={nearMe}
-          onCheckedChange={onNearMeToggle}
-          className="data-[state=checked]:bg-indigo-600 border-slate-300"
-        />
-        <Label htmlFor="nearMe" className="text-sm font-bold text-slate-700 cursor-pointer flex items-center gap-1.5">
-          <MapPin size={14} className="text-indigo-500" />
-          Near Me
-        </Label>
-      </div> */}
+
     </div>
   );
 };

@@ -21,7 +21,7 @@ export default function MessageInput({ onTyping, onStopTyping }) {
   const [markAsRead] = useMarkAsReadMutation();
 
   const chatPartnerId = selectedUser?.user_id?._id || selectedUser?._id;
-  const senderId = user?.user?._id; // ✅ Extract senderId
+  const senderId = user?.user?._id;
 
   useEffect(() => {
     if (!content) {

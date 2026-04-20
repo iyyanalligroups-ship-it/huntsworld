@@ -23,18 +23,18 @@ const Sidebar = () => {
   };
   const handleLinkClick = () => {
     if (window.innerWidth < 1024 && isSidebarOpen) {
-      toggleSidebar(); // Close sidebar on mobile
+      toggleSidebar(); 
     }
   };
   const handleLogout = () => {
-    logout(); // Clears context/token etc.
+    logout(); 
     navigate("/admin-login");
   };
 
   // Function to render menu items
   const renderMenuItems = (items, level = 0) => {
     return items.map((item) => {
-      const IconComponent = Icons[item.icon] || Icons.List; // Fallback to List icon
+      const IconComponent = Icons[item.icon] || Icons.List; 
       const hasChildren = item.children && item.children.length > 0;
 
 
@@ -100,7 +100,6 @@ const Sidebar = () => {
       >
         {/* Sidebar Header */}
         <div className="flex items-center p-2 border-b-1 ">
-          {/* <img className={`w-8 h-8 md:w-10 md:h-10 ${isSidebarOpen ? "hidden" : ""}`} src={bird} alt="Logo" /> */}
 
           <img src={easyCol} className={`w-32 ml-6 cursor-pointer ${!isSidebarOpen ? "hidden" : ""}`} onClick={() => navigate("/admin")} />
 

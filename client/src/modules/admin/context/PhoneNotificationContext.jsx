@@ -1,4 +1,4 @@
-// src/modules/admin/context/PhoneNotificationContext.jsx
+
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { io } from "socket.io-client";
 import { AuthContext } from "@/modules/landing/context/AuthContext";
@@ -9,8 +9,8 @@ import {
 const PhoneNotificationContext = createContext(undefined);
 
 export const PhoneNotificationProvider = ({ children }) => {
-  const { user } = useContext(AuthContext);                     // ← correct hook
-  const userId = user?.user?._id;                 // merchant user id
+  const { user } = useContext(AuthContext);                 
+  const userId = user?.user?._id;                 
 
   const [phoneNotifications, setPhoneNotifications] = useState([]);
   const socketRef = useRef(null);

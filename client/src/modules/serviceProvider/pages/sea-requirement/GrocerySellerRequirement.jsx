@@ -123,19 +123,8 @@ const GrocerySellerRequirement = () => {
               <p>
                 <strong>Preference:</strong> {req.supplier_preference}
               </p>
-              {/* <p>
-                <strong>States:</strong>{" "}
-                {req.selected_states?.length ? req.selected_states.join(", ") : "-"}
-              </p>
-              <p>
-                <strong>Address:</strong>{" "}
-                {req.user_id?.address
-                  ? `${req.user_id.address.street || ""}, ${req.user_id.address.city || ""}, ${req.user_id.address.state || ""}`
-                  : "-"}
-              </p> */}
-              {/* <p>
-                <strong>Role:</strong> {req.user_id?.role?.role || "-"}
-              </p> */}
+
+
               <p>
                 <strong>Date:</strong>{" "}
                 {dayjs(req.createdAt).format("DD MMM YYYY, hh:mm A")}

@@ -180,9 +180,7 @@ const GrocerySellerRequirements = ({ userId }) => {
         {currentRequirements.map((req) => (
           <Card key={req._id} className="rounded-xl shadow-lg bg-white">
             <CardHeader>
-              {/* <h2 className="text-xl font-bold text-[#0c1f4d]">
-                {req.product_name}
-              </h2> */}
+
 
               <TruncatedText
                 text={req.product_name}

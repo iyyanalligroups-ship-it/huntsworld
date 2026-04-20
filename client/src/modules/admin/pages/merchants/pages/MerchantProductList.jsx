@@ -37,7 +37,7 @@ const MerchantProductListing = ({ pagination, onEdit, onDelete,userId }) => {
   const { data, isLoading, isError } = useGetUserSellerProductsByIdQuery(
   { page, filter, search, userId },
   {
-    skip: !userId, // ✅ will skip API call if userId is not present
+    skip: !userId,
   }
 );
 

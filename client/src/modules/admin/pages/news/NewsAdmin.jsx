@@ -1,14 +1,10 @@
-// Frontend: pages/admin/NewsAdmin.js
-// Updated admin view with shadcn/ui Pagination, DeleteDialog, and toast notifications
-// Uses shadcn/ui components, lucide-react icons, Tailwind CSS, and react-toastify
-
 import { useState } from 'react';
 import {
   useGetAllNewsQuery,
   useCreateNewsMutation,
   useUpdateNewsMutation,
   useDeleteNewsMutation,
-} from '@/redux/api/NewsApi'; // Adjusted import path as per your code
+} from '@/redux/api/NewsApi';
 import {
   Table,
   TableBody,
@@ -45,8 +41,8 @@ import {
 } from '@/components/ui/pagination';
 import { Trash2, Edit, Plus } from 'lucide-react';
 import { format } from 'date-fns';
-import DeleteDialog from '@/model/DeleteModel'; // Adjust path to your DeleteDialog component
-import showToast from '@/toast/showToast'; // Adjust path to your toast utility
+import DeleteDialog from '@/model/DeleteModel';
+import showToast from '@/toast/showToast';
 import { useSidebar } from "../../hooks/useSidebar";
 
 const NewsAdmin = () => {
@@ -69,7 +65,7 @@ const NewsAdmin = () => {
   const [updateNews] = useUpdateNewsMutation();
   const [deleteNews] = useDeleteNewsMutation();
 
-  // Sort news in descending order by startDate
+  
   const sortedNews = [...news].sort((a, b) => new Date(b.startDate) - new Date(a.startDate));
   const totalPages = Math.ceil(sortedNews.length / itemsPerPage);
   const paginatedNews = sortedNews.slice((page - 1) * itemsPerPage, page * itemsPerPage);
@@ -195,7 +191,7 @@ const NewsAdmin = () => {
         </Dialog>
       </div>
 
-      {/* News Table */}
+
       <Table>
         <TableHeader>
           <TableRow>
@@ -238,7 +234,7 @@ const NewsAdmin = () => {
         </TableBody>
       </Table>
 
-      {/* Pagination */}
+
       <Pagination className="mt-4">
         <PaginationContent>
           <PaginationItem>
@@ -266,7 +262,6 @@ const NewsAdmin = () => {
         </PaginationContent>
       </Pagination>
 
-      {/* Delete Confirmation Dialog */}
       <DeleteDialog
         open={deleteDialogOpen}
         onClose={() => setDeleteDialogOpen(false)}

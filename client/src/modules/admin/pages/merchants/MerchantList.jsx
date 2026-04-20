@@ -248,7 +248,7 @@ const MerchantList = () => {
         onSubmit={handleAddMerchant}
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        onRefresh={fetchMerchants} // Pass fetchMerchants as onRefresh
+        onRefresh={fetchMerchants} 
       />
 
       <ConfirmationModal

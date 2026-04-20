@@ -26,7 +26,7 @@ const ProductImageZoom = ({ src }) => {
 
   return (
     <div className="flex items-start gap-4 relative">
-      {/* Left zoom box */}
+
       <div
         className="w-40 h-40 border ab rounded overflow-hidden z-100"
         style={{
@@ -36,7 +36,7 @@ const ProductImageZoom = ({ src }) => {
         }}
       />
 
-      {/* Main image */}
+
       <img
         ref={imageRef}
         src={src}

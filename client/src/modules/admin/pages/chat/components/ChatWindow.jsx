@@ -256,7 +256,6 @@ export default function ChatWindow() {
           }
           return validPrev;
         });
-        // Always scroll to bottom if I'm the sender, OR if I'm already at the bottom
         if (msg.sender === user?.user?._id || atBottom) {
           setTimeout(() => scrollToBottom("smooth"), 100);
         }
@@ -400,7 +399,7 @@ export default function ChatWindow() {
     }
     setEditMessageId(msg._id);
     setIsEditing(true);
-    setEditMessage({ ...msg, originalContent: msg.content }); // Store original content
+    setEditMessage({ ...msg, originalContent: msg.content });
   };
 
   const handleEditSubmit = async () => {
@@ -409,7 +408,7 @@ export default function ChatWindow() {
       content: editMessage?.content,
     });
     if (editMessage && editMessageId && editMessage.content.trim()) {
-      // Optimistic update
+
       setMessages((prev) => {
         const validPrev = (prev || []).filter(Boolean);
         return validPrev
@@ -429,15 +428,14 @@ export default function ChatWindow() {
       try {
         const response = await updateMessage({
           messageId: editMessageId,
-          updatedData: { content: editMessage.content.trim() }, // Wrap content in updatedData
+          updatedData: { content: editMessage.content.trim() },
         }).unwrap();
         console.log("Message updated successfully:", response);
-        // Invalidate RTK Query cache
+  
         refetchBottom();
         showToast("Message updated successfully", "success");
       } catch (error) {
         console.error("Failed to update message:", error);
-        // Revert optimistic update
         setMessages((prev) => {
           const validPrev = (prev || []).filter(Boolean);
           return validPrev

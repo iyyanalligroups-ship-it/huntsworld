@@ -1,4 +1,3 @@
-// src/modules/admin/components/chat/UserListItem.jsx (or wherever your UserListItem is)
 import React from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -6,14 +5,10 @@ import { cn } from "@/lib/utils";
 import { Image, Video, Music, File, Ban } from "lucide-react";
 import { useSocket } from "@/modules/admin/context/SocketContext";
 
-/* -----------------------------
-   UPDATED getMessageType()
-   Detects images, videos, audio, documents, HTML (requirement request)
--------------------------------- */
+
 const getMessageType = (content) => {
   if (!content) return "text";
 
-  // Detect HTML content first (Requirement Request)
   const isHTML = /<\/?[a-z][\s\S]*>/i.test(content);
   if (isHTML) return "html";
 
@@ -42,7 +37,7 @@ export default function UserListItem({ user, isActive }) {
           : "hover:bg-slate-50"
       )}
     >
-      {/* Avatar Section */}
+
       <div className="relative shrink-0">
         <Avatar className="h-12 w-12 border-2 border-white shadow-sm transition-transform duration-200 group-hover:scale-105">
           <AvatarImage src={user?.profile_pic} alt={user?.name} className="object-cover" />
@@ -51,13 +46,12 @@ export default function UserListItem({ user, isActive }) {
           </AvatarFallback>
         </Avatar>
 
-        {/* Online Status Dot */}
         {isOnline && (
           <span className="absolute bottom-0.5 right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white shadow-sm animate-pulse"></span>
         )}
       </div>
 
-      {/* Content Section */}
+  
       <div className="flex flex-col flex-1 min-w-0 py-0.5">
         <div className="flex items-center justify-between mb-0.5">
           <div className="flex flex-col min-w-0">
@@ -84,7 +78,7 @@ export default function UserListItem({ user, isActive }) {
           </span>
         </div>
 
-        {/* Message Preview */}
+  
         <div className="flex items-center justify-between gap-2">
           <span className={cn(
             "text-xs truncate flex items-center gap-1.5",
@@ -125,7 +119,7 @@ export default function UserListItem({ user, isActive }) {
         </div>
       </div>
 
-      {/* Active Indicator */}
+ 
       {isActive && (
         <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-indigo-600 rounded-r-full shadow-lg shadow-indigo-200"></div>
       )}

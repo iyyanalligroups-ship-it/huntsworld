@@ -21,7 +21,7 @@ export default function Sidebar({ onSelect }) {
   const containerRef = useRef(null);
   const { selectedUser, setSelectedUser } = useSelectedUser();
   const [markAsRead] = useMarkAsReadMutation();
-  const { setTotalUnread } = useUnreadCount(); // ← unused in this version?
+  const { setTotalUnread } = useUnreadCount();
 
   const currentUserId = user?.user?._id;
   const selectedUserId = selectedUser?.user_id?._id || selectedUser?._id;
@@ -31,7 +31,7 @@ export default function Sidebar({ onSelect }) {
     { skip: !currentUserId }
   );
 
-  // Merge API data with local state (preserves socket-updated fields)
+
   useEffect(() => {
     if (!isSuccess || !data?.users) return;
 
@@ -50,10 +50,10 @@ export default function Sidebar({ onSelect }) {
           };
         }
 
-        // Preserve local (socket-updated) last message / unread count if more recent
+
         return {
           ...local,
-          ...apiUser, // name, avatar, etc. from server
+          ...apiUser, 
           unreadCount: local.unreadCount > (apiUser.unreadCount || 0)
             ? local.unreadCount
             : Number(apiUser.unreadCount) || 0,
@@ -68,7 +68,7 @@ export default function Sidebar({ onSelect }) {
         };
       });
 
-      // Keep users that are only in local state (very rare case)
+
       const apiIds = new Set(merged.map((u) => u?._id));
       const extraLocal = validPrev.filter((u) => !apiIds.has(u?._id));
 
@@ -80,7 +80,7 @@ export default function Sidebar({ onSelect }) {
     });
   }, [data?.users, isSuccess]);
 
-  // Infinite scroll
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container || isFetching || page >= (data?.totalPages || 1)) return;
@@ -95,7 +95,7 @@ export default function Sidebar({ onSelect }) {
     return () => container.removeEventListener("scroll", handleScroll);
   }, [isFetching, page, data?.totalPages]);
 
-  // Socket listeners
+
   useEffect(() => {
     if (!socket || !currentUserId) return;
 
@@ -209,12 +209,11 @@ export default function Sidebar({ onSelect }) {
     };
   }, [socket, currentUserId, selectedUserId, refetch]);
 
-  // Auto mark as read when user is selected
   useEffect(() => {
     if (!selectedUserId || !currentUserId) return;
 
     markAsRead({ userId: currentUserId, selectedUserId }).unwrap().catch(() => {
-      // silent fail
+
     });
   }, [selectedUserId, currentUserId, markAsRead]);
 

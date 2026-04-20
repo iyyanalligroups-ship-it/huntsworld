@@ -391,9 +391,7 @@ const ProductAttributesPage = ({
                                   <Mail className="w-5 h-5 text-[#0c1f4d]" />
                                 )}
                                 {/* No need for this anymore – can safely delete or leave commented */}
-                                {/* {key === "company_phone_number" && (
-              <Phone className="w-5 h-5 text-[#0c1f4d]" />
-            )} */}
+
                                 {key === "company_type" && (
                                   <Building className="w-5 h-5 text-[#0c1f4d]" />
                                 )}

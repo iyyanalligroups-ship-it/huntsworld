@@ -10,17 +10,17 @@ import DashboardComponents from "./DashboardComponents";
 
 const Dashboard = () => {
   const { isSidebarOpen } = useSidebar();
-  const { points } = useContext(ActiveUserContext) || {}; // Safeguard against undefined context
-  const [accessToken, setAccessToken] = useState(null); // Store token
-  const [profile, setProfile] = useState(null); // Store user profile
+  const { points } = useContext(ActiveUserContext) || {}; 
+  const [accessToken, setAccessToken] = useState(null); 
+  const [profile, setProfile] = useState(null); 
 
-  // Google login setup
+
   const login = useGoogleLogin({
     onSuccess: async (codeResponse) => {
       console.log("Login Success:", codeResponse);
 
       const token = codeResponse.access_token;
-      setAccessToken(token); // Store access token
+      setAccessToken(token); 
 
       try {
         const response = await fetch(
@@ -36,7 +36,7 @@ const Dashboard = () => {
     onError: (error) => console.error("Login Failed:", error),
   });
 
-  // Fetch user info when accessToken is set
+
   useEffect(() => {
     if (accessToken) {
       axios

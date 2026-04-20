@@ -10,18 +10,18 @@ import { Star } from "lucide-react";
 import DeleteDialog from "@/model/DeleteModel";
 
 const TestimonialList = ({ onEdit, refreshKey,onRefresh  }) => {
-    const [filter, setFilter] = useState("all"); // For feedbackType filter
+    const [filter, setFilter] = useState("all");
     const [page, setPage] = useState(1);
-    const itemsPerPage = 10; // Number of items per page
+    const itemsPerPage = 10;
     const [deleteId, setDeleteId] = useState(null);
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const { data: testimonials, isLoading, refetch } = useGetTestimonialsQuery({ filter, page });
     const [deleteTestimonial] = useDeleteTestimonialMutation();
 
     useEffect(() => {
-        refetch(); // <- called when refreshKey changes
+        refetch(); 
     }, [refreshKey]);
-    // Ensuring totalCount exists and is a valid number
+
     const totalTestimonials = testimonials?.totalCount || 0;
     const totalPages = totalTestimonials > 0 ? Math.ceil(totalTestimonials / itemsPerPage) : 0; // Avoid NaN
 
@@ -60,7 +60,6 @@ const confirmDelete =async ()=>{
     return (
         <div className="space-y-6">
             <h2 className="text-xl font-bold mb-4 border-b-2"> Feedback List</h2>
-            {/* Filter Section */}
             <div className="flex items-center justify-between">
                 <Select value={filter} onValueChange={handleFilterChange}>
                     <SelectTrigger>
@@ -79,7 +78,7 @@ const confirmDelete =async ()=>{
                 </Select>
             </div>
 
-            {/* Table Section */}
+
             <Table className="min-w-full">
                 <TableHeader>
                     <TableRow>
@@ -106,7 +105,7 @@ const confirmDelete =async ()=>{
                                 </TableCell>
                                 <TableCell>
                                     <Badge variant="outline" className="flex items-center gap-2">
-                                        <Star size={16} color="#FFD700" /> {/* Gold color for the star */}
+                                        <Star size={16} color="#FFD700" /> 
                                         <span>{testimonial.rating}</span>
                                     </Badge>
                                 </TableCell>
@@ -127,9 +126,8 @@ const confirmDelete =async ()=>{
                 </TableBody>
             </Table>
 
-            {/* Pagination Section */}
             <div className="flex justify-between items-center mt-4">
-                {/* Previous Button */}
+         
                 <Button
                     variant="outline"
                     onClick={() => handlePageChange(page - 1)}
@@ -138,12 +136,12 @@ const confirmDelete =async ()=>{
                     Previous
                 </Button>
 
-                {/* Page Numbers */}
+            
                 <span className="text-sm">
                     Page {page} of {totalPages}
                 </span>
 
-                {/* Next Button */}
+              
                 <Button
                     variant="outline"
                     onClick={() => handlePageChange(page + 1)}

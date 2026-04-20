@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Eye, Pencil, Trash2, Save, X } from "lucide-react";
 
-// ProductDetails component (unchanged from previous, includes all table fields)
 const ProductDetails = ({ product }) => {
   return (
     <div className="p-4 bg-gray-50 border border-gray-200 rounded-md shadow-sm w-full box-border max-w-full">
@@ -52,7 +51,7 @@ const ProductDetails = ({ product }) => {
   );
 };
 
-// ProductEditForm component (unchanged)
+
 const ProductEditForm = ({ product, onSave, onCancel }) => {
   const [formData, setFormData] = useState({
     name: product.name,
@@ -161,7 +160,7 @@ const ProductEditForm = ({ product, onSave, onCancel }) => {
   );
 };
 
-// DeleteConfirmationModal component (unchanged)
+
 const DeleteConfirmationModal = ({ isOpen, productName, onConfirm, onCancel }) => {
   if (!isOpen) return null;
 
@@ -237,7 +236,7 @@ const ViewProducts = ({ merchant, onBack }) => {
 
   const handleEditClick = (productId) => {
     setEditingProductId(productId);
-    setSelectedProductId(null); // Close the card when editing
+    setSelectedProductId(null);
   };
 
   const handleSaveEdit = (productId, updatedData) => {
@@ -378,7 +377,6 @@ const ViewProducts = ({ merchant, onBack }) => {
         </p>
       )}
 
-      {/* Product Details Card */}
       {selectedProduct && (
         <div className="mt-4 max-w-4xl mx-auto">
           <ProductDetails product={selectedProduct} />

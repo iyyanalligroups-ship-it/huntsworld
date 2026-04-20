@@ -108,7 +108,7 @@ const ServiceProviderProductForm = ({ editingProduct }) => {
     const formDataUpload = new FormData();
     formDataUpload.append("product_name", formData.product_name || "default");
   
-    // Append all selected files at once
+
     files.forEach((file) => {
       formDataUpload.append("product_image", file);
     });
@@ -141,7 +141,7 @@ const ServiceProviderProductForm = ({ editingProduct }) => {
       console.error("Image upload failed:", err);
     }
   
-    e.target.value = null; // reset input so selecting the same file again will trigger onChange
+    e.target.value = null; 
   };
   
 
@@ -189,7 +189,7 @@ const ServiceProviderProductForm = ({ editingProduct }) => {
     updated[index][field] = value;
     setAttributes(updated);
   };
-  // STEP 1: When editingProduct exists, set just the category_id first
+
   useEffect(() => {
     if (editingProduct) {
       setCategoryData((prev) => ({
@@ -199,7 +199,6 @@ const ServiceProviderProductForm = ({ editingProduct }) => {
     }
   }, [editingProduct]);
 
-  // STEP 2: When subCategories load & we have editingProduct, set sub_category_id
   useEffect(() => {
     if (editingProduct && subCategories?.data?.length > 0) {
       setCategoryData((prev) => ({
@@ -209,7 +208,7 @@ const ServiceProviderProductForm = ({ editingProduct }) => {
     }
   }, [editingProduct, subCategories]);
 
-  // STEP 3: When superSubCategories load & we have editingProduct, set super_sub_category_id
+
   useEffect(() => {
     if (editingProduct && superSubCategories?.data?.length > 0) {
       setCategoryData((prev) => ({
@@ -219,7 +218,7 @@ const ServiceProviderProductForm = ({ editingProduct }) => {
     }
   }, [editingProduct, superSubCategories]);
 
-  // STEP 4: When deepSubCategories load & we have editingProduct, set deep_sub_category_id
+
   useEffect(() => {
     if (editingProduct && deepSubCategories?.data?.length > 0) {
       setCategoryData((prev) => ({

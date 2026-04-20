@@ -40,7 +40,7 @@ const AdminTrendingPointsManagement = () => {
     await refetch();
   };
 
-  // Debounce search input
+
   useEffect(() => {
     const handler = setTimeout(() => {
       console.log('Debounced search value:', search);
@@ -49,7 +49,7 @@ const AdminTrendingPointsManagement = () => {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Set selected user based on search results
+
   useEffect(() => {
     if (searchResults?.length > 0) {
       setSelectedTargetUser(searchResults[0]);
@@ -74,12 +74,12 @@ const AdminTrendingPointsManagement = () => {
     : [];
   const totalPages = activeUsersData ? Math.ceil(activeUsersData.total / limit) : 1;
 
-  // Format date to professional style
+
   const formatDate = (date) => {
     return format(new Date(date), 'dd MMM yyyy, HH:mm');
   };
 
-  // Map status to badge variants and icons
+
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
       case 'active':
@@ -103,7 +103,6 @@ const AdminTrendingPointsManagement = () => {
     }
   };
 
-  // Map payment status to badge variants and icons
   const getPaymentStatusBadge = (paymentStatus) => {
     switch (paymentStatus?.toLowerCase()) {
       case 'paid':

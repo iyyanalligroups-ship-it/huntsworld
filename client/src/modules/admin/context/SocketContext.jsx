@@ -1,5 +1,3 @@
-// src/modules/admin/context/SocketContext.jsx
-
 import {
   createContext,
   useContext,

@@ -17,7 +17,7 @@ const MultiStepModalGrocery = ({ open, onOpenChange, onSubmit, onRefresh, error:
   const [formData, setFormData] = useState({
     user_id: "",
     name: "",
-    email: "", // Note: This is not sent to backend, used for user search
+    email: "",
     phone_number: "",
     entity_type: "grocery_seller",
     address_type: "",
@@ -30,7 +30,7 @@ const MultiStepModalGrocery = ({ open, onOpenChange, onSubmit, onRefresh, error:
     addressId: "",
     isSearched: false,
     shop_name: "",
-    shop_email: "", // Initialize as empty string
+    shop_email: "", 
     shop_phone_number: "",
     verification_certificate_type: "",
     verification_type_number: "",

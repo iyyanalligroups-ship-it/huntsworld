@@ -22,7 +22,7 @@ const WalletPage = () => {
   const [selectedSeller, setSelectedSeller] = useState(null);
   const [openRedeemDialog, setOpenRedeemDialog] = useState(false);
 
-  // Debounce search input
+
   useEffect(() => {
     const handler = setTimeout(() => {
       console.log('Debounced search value:', searchInput);
@@ -31,19 +31,19 @@ const WalletPage = () => {
     return () => clearTimeout(handler);
   }, [searchInput]);
 
-  // Fetch search results
+
   const { data: searchResults, isLoading: isSearchLoading, error: searchError } = useGetUserBySearchQuery(debouncedSearch, {
     skip: !debouncedSearch || debouncedSearch.length < 3,
   });
 
-  // Fetch selected user details
+
   const { data: merchantData, isLoading, isError } = useGetUserByIdQuery(selectedSeller?._id, {
     skip: !selectedSeller,
   });
 
   const { data: couponsData, isLoading: couponsLoading } = useGetCouponsQuery();
 
-  // Update selected seller when search results change
+
   useEffect(() => {
     if (searchResults?.users?.length > 0) {
       setSelectedSeller(searchResults.users[0]);

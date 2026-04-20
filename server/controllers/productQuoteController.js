@@ -9,35 +9,7 @@ const mongoose = require('mongoose');
 const Message = require("../models/messageModel");
 const axios = require("axios");
 
-// Create a new quote
-// exports.createQuote = async (req, res) => {
-//   try {
-//     const { productId, quantity, unit, phoneNumber, matchQuotes, userId } = req.body;
 
-//     // Find the product to get ownerId
-//     const product = await Product.findById(productId);
-//     if (!product) {
-//       return res.status(404).json({ message: 'Product not found' });
-//     }
-
-//     const newQuote = new ProductQuote({
-//       productId,
-//       quantity,
-//       unit,
-//       phoneNumber,
-//       matchQuotes,
-//       userId,
-//       productOwnerId: product.seller_id,
-//     });
-
-//     await newQuote.save();
-
-//     res.status(201).json({success:true, message: 'Quote created successfully', quote: newQuote });
-//   } catch (error) {
-//     console.error('Error creating quote:', error);
-//     res.status(500).json({success:false, message: 'Server error' });
-//   }
-// };
 
 exports.createQuote = async (req, res) => {
   try {

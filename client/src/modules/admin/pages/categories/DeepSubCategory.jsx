@@ -1,71 +1,4 @@
 
-// import { Button } from "@/components/ui/button";
-// import {
-//   useCreateDeepSubCategoryMutation,
-//   useUpdateDeepSubCategoryMutation,
-// } from "@/redux/api/DeepSubCategoryApi";
-// import DeepSubCategoryList from "./pages/DeepSubCategoryList";
-// import DeepSubCategoryForm from "./forms/DeepSubCategoryForm";
-// import { useState } from "react";
-// import { useSidebar } from "@/modules/admin/hooks/useSidebar";
-
-// const DeepSubCategory = () => {
-//   const [modalOpen, setModalOpen] = useState(false);
-//   const [editingData, setEditingData] = useState(null);
-//   const [createSuperSubCategory] = useCreateDeepSubCategoryMutation();
-//   const [updateSuperSubCategory] = useUpdateDeepSubCategoryMutation();
-//   const { isSidebarOpen } = useSidebar();
-//   const [refetchListFn, setRefetchListFn] = useState(null);
-
-//   const handleSave = async (formData) => {
-//     if (editingData) {
-//       await updateSuperSubCategory({ id: editingData._id, ...formData });
-//     } else {
-//       await createSuperSubCategory(formData);
-//     }
-//     setModalOpen(false);
-//     setEditingData(null);
-//     refetchListFn?.();
-//   };
-
-//   return (
-//     <div className={`${isSidebarOpen ? "p-6 lg:ml-56" : "p-4 lg:ml-16"}`}>
-//       <div className="max-w-4xl w-full mx-auto mt-10">
-//         <div className="flex justify-between items-center mb-4">
-//           <h2 className="text-xl font-bold">Manage Deep SubCategories</h2>
-//           <Button onClick={() => setModalOpen(true)}>
-//             + Add Deep SubCategory
-//           </Button>
-//         </div>
-
-//         <DeepSubCategoryList
-//           onEdit={(item) => {
-//             setEditingData(item);
-//             setModalOpen(true);
-//           }}
-        
-//         />
-
-//         <DeepSubCategoryForm
-//           open={modalOpen}
-//           onClose={() => {
-//             setModalOpen(false);
-//             setEditingData(null);
-//           }}
-//           data={editingData}
-//           onSave={handleSave}
-//           setRefetchFn={setRefetchListFn}
-//         />
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default DeepSubCategory;
-
-
-
-
 import { Button } from "@/components/ui/button";
 import {
   useCreateDeepSubCategoryMutation,
@@ -103,18 +36,17 @@ const DeepSubCategory = () => {
       }
       setModalOpen(false);
       setEditingData(null);
-      refetchListFn?.(); // Ensure data is refetched immediately after saving
+      refetchListFn?.();
     } catch (error) {
       console.error("Save failed:", error);
     }
   };
 
   useEffect(() => {
-    // This will ensure the page gets refetched every time modal closes
     if (!modalOpen && refetchListFn) {
       refetchListFn();
     }
-  }, [modalOpen, refetchListFn]); // Watching modalOpen to refetch when it closes
+  }, [modalOpen, refetchListFn]);
 
   return (
     <div className={`${isSidebarOpen ? "p-6 lg:ml-56" : "p-4 lg:ml-16"}`}>

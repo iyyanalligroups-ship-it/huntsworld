@@ -13,13 +13,12 @@ const Stepper4 = ({ formData, setFormData, error, setError, handleNext, handleBa
   const [imagePreviews, setImagePreviews] = useState([]);
   const [uploading, setUploading] = useState(false);
 
-  // Log to confirm file load
   console.log("Loaded Stepper4.jsx (Merchant) - 2025-04-18-fix-v7");
 
-  // Use environment variable for base URL
+
   const IMAGE_SERVER_URL = import.meta.env.VITE_API_IMAGE_URL;
 
-  // Log props and env
+  
   console.log("Stepper4 props:", { formData, entityType: formData.entity_type, companyName: formData.company_name });
   console.log("VITE_IMAGE_SERVER_URL:", IMAGE_SERVER_URL);
   console.log("Logo upload URL:", `${IMAGE_SERVER_URL}/merchant-images/upload-logo`);
@@ -110,7 +109,7 @@ const Stepper4 = ({ formData, setFormData, error, setError, handleNext, handleBa
       let company_logo_url = formData.company_logo_url || "";
       let company_image_urls = formData.company_image_urls ? [...formData.company_image_urls] : [];
 
-      // Upload logo
+   
       if (logoFile) {
         const logoFormData = new FormData();
         logoFormData.append("logo", logoFile);
@@ -131,7 +130,7 @@ const Stepper4 = ({ formData, setFormData, error, setError, handleNext, handleBa
         console.log("No logo file selected");
       }
 
-      // Upload company images
+   
       const imagesFormData = new FormData();
       imageFiles.forEach((file, index) => {
         imagesFormData.append("files", file);
@@ -168,7 +167,7 @@ const Stepper4 = ({ formData, setFormData, error, setError, handleNext, handleBa
       });
       console.log("Parsed company_image_urls:", company_image_urls);
 
-      // Update formData
+  
       console.log("Updating formData:", { company_logo_url, company_image_urls });
       setFormData((prev) => ({
         ...prev,

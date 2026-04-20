@@ -18,18 +18,11 @@ import "react-medium-image-zoom/dist/styles.css";
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 
-/* -------------------------------------------------------
-   Utility helpers
-------------------------------------------------------- */
+
 
 const normalizeId = (val) =>
   typeof val === "object" ? val?._id?.toString() : val?.toString();
 
-/**
- * ADMIN MODE ALIGNMENT
- * senderId   → RIGHT
- * receiverId → LEFT
- */
 const isSenderSide = (msg, senderId) => {
   return normalizeId(msg.sender) === normalizeId(senderId);
 };
@@ -66,9 +59,6 @@ function groupMessagesByDate(messages) {
   return grouped;
 }
 
-/* -------------------------------------------------------
-   Chat Modal Component (ADMIN REVIEW MODE)
-------------------------------------------------------- */
 
 const ChatModal = ({
   open,
@@ -86,9 +76,7 @@ const ChatModal = ({
 
   const scrollRef = useRef(null);
 
-  /* -------------------------------------------------------
-     Fetch messages
-  ------------------------------------------------------- */
+
   const fetchMessages = async (pageNum = 1, append = false) => {
     if (pageNum === 1) setLoading(true);
     else setLoadingMore(true);
@@ -120,9 +108,7 @@ const ChatModal = ({
     }
   };
 
-  /* -------------------------------------------------------
-     Effects
-  ------------------------------------------------------- */
+
 
   useEffect(() => {
     if (!open) {
@@ -151,14 +137,10 @@ const ChatModal = ({
 
   const handleDownload = (url) => window.open(url, "_blank");
 
-  /* -------------------------------------------------------
-     Render
-  ------------------------------------------------------- */
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl h-[85vh] p-0 flex flex-col overflow-hidden">
-        {/* HEADER */}
         <DialogHeader className="p-6 border-b">
           <DialogTitle className="text-xl">
             Admin Review:{" "}
@@ -167,7 +149,6 @@ const ChatModal = ({
           </DialogTitle>
         </DialogHeader>
 
-        {/* CHAT BODY */}
         <div
           ref={scrollRef}
           onScroll={handleScroll}
@@ -194,7 +175,6 @@ const ChatModal = ({
                       } mb-2`}
                     >
                       <div className="max-w-xs lg:max-w-md flex flex-col">
-                        {/* NAME LABEL FOR ADMIN */}
                         <span className="text-[10px] text-gray-500 mb-1">
                           {sentBySender ? receiverName : senderName}
                         </span>

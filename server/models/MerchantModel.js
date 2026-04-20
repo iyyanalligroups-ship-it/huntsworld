@@ -87,7 +87,13 @@ const merchantSchema = new mongoose.Schema(
 
     company_logo: String,
     company_images: [String],
-    company_video: String,
+    company_video: {
+      type: String,
+      validate: {
+        validator: (v) => !v || /^(https?:\/\/)[^\s$.?#].[^\s]*$/.test(v),
+        message: "Please enter a valid video link (starting with http or https)",
+      },
+    },
     description: {
       type: String,
       validate: {
@@ -149,6 +155,7 @@ merchantSchema.pre("save", async function (next) {
     if (this.company_logo) progress += 10;
     if (this.company_images?.length) progress += 10;
     if (this.domain_name) progress += 10;           // ← NEW
+    if (this.company_video) progress += 5;         // ← NEW video field
     if (this.gst_number) progress += 15;
     if (this.pan) progress += 10;
     if (this.description) progress += 15;

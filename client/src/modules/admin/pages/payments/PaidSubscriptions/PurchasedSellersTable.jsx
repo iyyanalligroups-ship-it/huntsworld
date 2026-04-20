@@ -20,15 +20,12 @@ import {
 const PurchasedSellersTable = () => {
   const navigate = useNavigate();
   const [page, setPage] = useState(1);
-  const limit = 5; // Match backend default limit
-
-  // Fetch data with pagination parameters
+  const limit = 5;
   const { data: activeSubscriptions, isLoading, error } = useGetAllActiveSubscriptionsQuery({ page, limit });
 
   if (isLoading) return <div>Loading purchased sellers...</div>;
   if (error) return <div>Error fetching subscriptions: {error.message}</div>;
 
-  // Extract data and pagination metadata from API response
   const subscriptions = activeSubscriptions?.data || [];
   const pagination = activeSubscriptions?.pagination || {};
   const { total = 0, totalPages = 1, hasNextPage, hasPrevPage } = pagination;
@@ -155,13 +152,11 @@ const PurchasedSellersTable = () => {
               })}
             </TableBody>
           </Table>
-
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-4 flex justify-end">
               <Pagination>
                 <PaginationContent>
-                  {/* Previous */}
+
                   <PaginationItem>
                     <PaginationPrevious
                       href="#"
@@ -173,7 +168,6 @@ const PurchasedSellersTable = () => {
                     />
                   </PaginationItem>
 
-                  {/* Page numbers */}
                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
                     <PaginationItem key={pageNum}>
                       <PaginationLink
@@ -189,14 +183,12 @@ const PurchasedSellersTable = () => {
                     </PaginationItem>
                   ))}
 
-                  {/* Ellipsis for large page counts */}
                   {totalPages > 5 && page < totalPages - 2 && (
                     <PaginationItem>
                       <PaginationEllipsis />
                     </PaginationItem>
                   )}
 
-                  {/* Next */}
                   <PaginationItem>
                     <PaginationNext
                       href="#"

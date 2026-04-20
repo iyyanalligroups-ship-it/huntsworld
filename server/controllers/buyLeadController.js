@@ -79,38 +79,8 @@ exports.createBuyLead = async (req, res) => {
 };
 
 
-// exports.getBuyLeads = async (req, res) => {
-//   try {
-//     const { page = 1, limit = 10 } = req.query;
-//     const skip = (page - 1) * limit;
 
-//     // Fetch BuyLeads and populate user details
-//     const buyLeads = await BuyLead.find()
-//       .skip(skip)
-//       .limit(parseInt(limit))
-//       .sort({ createdAt: -1 }) // Newest first
-//       .populate({
-//         path: 'user_id',
-//         select: 'name phone', // Select only name and phone from User model
-//       })
-//       .lean();
 
-//     // Log fetched data for debugging
-//     
-
-//     const totalCount = await BuyLead.countDocuments();
-
-//     res.json({
-//       success: true,
-//       data: buyLeads,
-//       totalPages: Math.ceil(totalCount / limit),
-//       totalCount,
-//     });
-//   } catch (err) {
-//     console.error('Get BuyLeads error:', err);
-//     res.status(500).json({ error: 'Server error' });
-//   }
-// };
 
 
 

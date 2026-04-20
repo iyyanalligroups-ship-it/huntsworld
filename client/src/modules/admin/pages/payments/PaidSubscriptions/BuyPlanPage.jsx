@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import PurchaseDialog from './PurchaseDialog'; // Reuse the same dialog, but for buy
+import PurchaseDialog from './PurchaseDialog';
 import { useGetAllPlansQuery, useCreateRazorpayOrderMutation, useVerifyPaymentMutation, useCreateSubscriptionMutation, useGetUserBySearchQuery } from '@/redux/api/UserSubscriptionPlanApi';
 import { AuthContext } from '@/modules/landing/context/AuthContext';
 import { loadRazorpayScript } from '@/modules/merchant/utils/Razorpay';
@@ -31,20 +31,18 @@ const BuyPlanPage = () => {
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedSearch(searchInput.trim());
-        }, 500); // 2 seconds
+        }, 500);
 
         return () => {
-            clearTimeout(handler); // clear previous timer if user types again
+            clearTimeout(handler);
         };
     }, [searchInput]);
-
-    // API call only runs when debouncedSearch changes
     const { data: searchResults, isLoading, error } = useGetUserBySearchQuery(debouncedSearch, {
-        skip: !debouncedSearch, // skip empty queries
+        skip: !debouncedSearch, 
     });
 
     console.log(searchResults, "searchResults");
-    // When new search results arrive, auto-select the first seller
+
     useEffect(() => {
         if (searchResults?.users?.length > 0) {
             setSelectedSeller(searchResults.users[0]);
@@ -67,8 +65,7 @@ const BuyPlanPage = () => {
         setSelectedPlan(plan);
         setIsPurchaseOpen(true);
     };
-    // 📅 Function to calculate end date
-    // Helper function to calculate end date
+
     function calculateEndDateFromElements(elements, startDate = new Date()) {
         const durationElement = elements.find(
             el => el.element_name.trim() === "Subscription Duration"
@@ -88,7 +85,7 @@ const BuyPlanPage = () => {
             endDate.setDate(endDate.getDate() + value);
         }
 
-        return endDate.toISOString().split("T")[0]; // "YYYY-MM-DD"
+        return endDate.toISOString().split("T")[0];
     }
     const handlePurchase = async (plan) => {
         try {
@@ -128,15 +125,15 @@ const BuyPlanPage = () => {
                         }).unwrap();
 
                         if (verifyRes.success) {
-                            // ✅ Calculate end_date from plan.elements
+
                             const endDate = calculateEndDateFromElements(plan.elements);
 
                             await createSubscription({
                                 user_id: userId,
                                 subscription_plan_id: plan.subscription_plan_id._id,
                                 end_date: endDate,
-                                amount: plan.subscription_plan_id.price,      // Add amount here
-                                razorpay_order_id: order.id,                   // Add razorpay order id here
+                                amount: plan.subscription_plan_id.price,      
+                                razorpay_order_id: order.id,                   
                             }).unwrap();
 
 
@@ -183,7 +180,6 @@ const BuyPlanPage = () => {
                     </p>
                 </div>
 
-                {/* Search Input */}
                 <div className="mb-6">
                     <Label htmlFor="searchInput" className="text-gray-700">Search Seller by Email or Phone</Label>
                     <div className="relative w-full mt-4">
@@ -199,7 +195,6 @@ const BuyPlanPage = () => {
                     {isLoading && <p>Loading...</p>}
                     {error && <p>Error fetching users</p>}
 
-                    {/* Selected Seller Info */}
                     {selectedSeller && (
                         <div className="p-3 rounded-lg border mt-5 border-gray-300 bg-gray-50">
                             <p className="font-medium text-[#0c1f4d] ">Selected Seller Info:</p>

@@ -249,26 +249,8 @@ exports.getTrendingPointById = async (req, res) => {
 };
 
 // 📌 Update trending point by ID
-// exports.updateTrendingPoint = async (req, res) => {
-//   try {
-//     const { user_id, product_id, trending_Points, date } = req.body;
 
-//     const trendingPoint = await TrendingPoints.findById(req.params.id);
-//     if (!trendingPoint) {
-//       return res.status(404).json({ message: "Trending Point not found" });
-//     }
 
-//     trendingPoint.user_id = user_id ?? trendingPoint.user_id;
-//     trendingPoint.product_id = product_id ?? trendingPoint.product_id;
-//     trendingPoint.trending_Points = trending_Points ?? trendingPoint.trending_Points;
-//     trendingPoint.date = date ?? trendingPoint.date;
-
-//     await trendingPoint.save();
-//     res.json(trendingPoint);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 
 exports.updateTrendingPoint = async (req, res) => {
   try {
@@ -306,17 +288,8 @@ exports.updateTrendingPoint = async (req, res) => {
 };
 
 // 📌 Delete trending point by ID
-// exports.deleteTrendingPoint = async (req, res) => {
-//   try {
-//     const trendingPoint = await TrendingPoints.findByIdAndDelete(req.params.id);
-//     if (!trendingPoint) {
-//       return res.status(404).json({ message: "Trending Point not found" });
-//     }
-//     res.json({ message: "Trending Point deleted successfully" });
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
+
+
 
 exports.deleteTrendingPoint = async (req, res) => {
   try {
@@ -603,134 +576,8 @@ exports.getTrendingPointsWithProductByUser = async (req, res) => {
   }
 };
 
-// exports.getTrendingPointsWithProductByUser = async (req, res) => {
-//   try {
-//     const { user_id } = req.params;
-//     const { page = 1, limit = 10, search = "", filter = "all" } = req.query;
 
-//     if (!mongoose.Types.ObjectId.isValid(user_id)) {
-//       return res.status(400).json({ message: "Invalid user ID" });
-//     }
 
-//     const skip = (parseInt(page) - 1) * parseInt(limit);
-
-//     // === STEP 1: Find the actual seller document (_id) using user_id ===
-//     let sellerRef = null;  // This is the _id from Merchant or ServiceProvider
-
-//     // First: Check Merchant
-//     const merchant = await Merchant.findOne({ user_id }).select("_id");
-//     if (merchant) {
-//       sellerRef = merchant._id;
-//     }
-//     // If not in Merchant → Check ServiceProvider
-//     else {
-//       const serviceProvider = await ServiceProvider.findOne({ user_id }).select("_id");
-//       if (serviceProvider) {
-//         sellerRef = serviceProvider._id;
-//       }
-//     }
-
-//     if (!sellerRef) {
-//       return res.status(200).json({
-//         success: true,
-//         data: [],
-//         total: 0,
-//         page: parseInt(page),
-//         limit: parseInt(limit),
-//         message: "No seller profile found for this user",
-//       });
-//     }
-
-//     // === STEP 2: Date Filter ===
-//     const dateFilter = {};
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
-
-//     if (filter === "today") {
-//       dateFilter.date = { $gte: today };
-//     } else if (filter === "yesterday") {
-//       const yesterday = new Date(today);
-//       yesterday.setDate(today.getDate() - 1);
-//       dateFilter.date = { $gte: yesterday, $lt: today };
-//     } else if (filter === "week") {
-//       const weekStart = new Date(today);
-//       weekStart.setDate(today.getDate() - today.getDay());
-//       weekStart.setHours(0, 0, 0, 0);
-//       dateFilter.date = { $gte: weekStart };
-//     } else if (filter === "month") {
-//       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-//       dateFilter.date = { $gte: monthStart };
-//     }
-
-//     // === STEP 3: Get TrendingPoints for this user ===
-//     const trendingQuery = { user_id, ...dateFilter };
-
-//     const trendingPoints = await TrendingPoints.find(trendingQuery)
-//       .sort({ updatedAt: -1 })
-//       .skip(skip)
-//       .limit(parseInt(limit))
-//       .lean();
-
-//     const totalCount = await TrendingPoints.countDocuments(trendingQuery);
-
-//     if (trendingPoints.length === 0) {
-//       return res.status(200).json({
-//         success: true,
-//         data: [],
-//         total: 0,
-//         page: parseInt(page),
-//         limit: parseInt(limit),
-//       });
-//     }
-
-//     const productIds = trendingPoints.map(tp => tp.product_id);
-
-//     // === STEP 4: Find ONLY products where seller_id === Merchant/ServiceProvider _id AND verified ===
-//     const productQuery = {
-//       _id: { $in: productIds },
-//       seller_id: sellerRef,                    // ← CORRECT: Use the document _id
-//       product_verified_by_admin: true
-//     };
-
-//     if (search) {
-//       productQuery.product_name = { $regex: new RegExp(search, "i") };
-//     }
-
-//     const products = await Product.find(productQuery)
-//       .select("product_name images price discount selling_price")
-//       .lean();
-
-//     // === STEP 5: Final mapping — only valid products ===
-//     const result = trendingPoints
-//       .map((tp) => {
-//         const product = products.find(p => p._id.toString() === tp.product_id.toString());
-//         if (!product) return null;
-
-//         return {
-//           ...tp,
-//           product,
-//         };
-//       })
-//       .filter(Boolean);
-
-//     res.status(200).json({
-//       success: true,
-//       data: result,
-//       total: totalCount,
-//       page: parseInt(page),
-//       limit: parseInt(limit),
-//       hasMore: result.length === parseInt(limit),
-//     });
-
-//   } catch (error) {
-//     console.error("Error in getTrendingPointsWithProductByUser:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Internal server error",
-//       error: error.message,
-//     });
-//   }
-// };
 // 📌 Delete Trending Points (undo last added)
 exports.customDeletePoints = async (req, res) => {
   try {
@@ -764,85 +611,4 @@ exports.customDeletePoints = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
-
-// exports.getTrendingPointsWithProductByUser = async (req, res) => {
-//   try {
-//     const { user_id } = req.params;
-//     const { page = 1, limit = 10, search = "", filter = "all" } = req.query;
-
-//     if (!mongoose.Types.ObjectId.isValid(user_id)) {
-//       return res.status(400).json({ message: "Invalid user ID" });
-//     }
-
-//     const skip = (parseInt(page) - 1) * parseInt(limit);
-
-//     // Prepare date filter
-//     const dateFilter = {};
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
-
-//     if (filter === "today") {
-//       dateFilter.date = { $gte: today };
-//     } else if (filter === "yesterday") {
-//       const yesterday = new Date(today);
-//       yesterday.setDate(today.getDate() - 1);
-//       dateFilter.date = {
-//         $gte: yesterday,
-//         $lt: today,
-//       };
-//     } else if (filter === "week") {
-//       const weekStart = new Date(today);
-//       weekStart.setDate(today.getDate() - today.getDay());
-//       dateFilter.date = { $gte: weekStart };
-//     } else if (filter === "month") {
-//       const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
-//       dateFilter.date = { $gte: monthStart };
-//     }
-
-//     // Step 1: Get all matching trending points for user
-//     const baseQuery = {
-//       user_id,
-//       ...dateFilter,
-//     };
-
-//     const trendingPoints = await TrendingPoints.find(baseQuery)
-//       .sort({ updatedAt: -1 })
-//       .skip(skip)
-//       .limit(parseInt(limit));
-
-//     const totalCount = await TrendingPoints.countDocuments(baseQuery);
-
-//     const productIds = trendingPoints.map((tp) => tp.product_id);
-
-//     const products = await Product.find({
-//       _id: { $in: productIds },
-//       ...(search && {
-//         product_name: { $regex: new RegExp(search, "i") },
-//       }),
-//     });
-
-//     const result = trendingPoints
-//       .map((tp) => {
-//         const productDetail = products.find(
-//           (p) => p._id.toString() === tp.product_id.toString()
-//         );
-//         if (!productDetail) return null;
-//         return {
-//           ...tp._doc,
-//           product: productDetail,
-//         };
-//       })
-//       .filter(Boolean); // Remove nulls
-
-//     res.status(200).json({
-//       success: true,
-//       data: result,
-//       total: totalCount,
-//       page: parseInt(page),
-//       limit: parseInt(limit),
-//     });
-//   } catch (error) {
-//     console.error("Error in getTrendingPointsWithProductByUser:", error);
-//     res.status(500).json({ success: false, message: "Internal server error" });
-//   }
-// };
+

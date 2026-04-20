@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Eye,
+  ExternalLink,
 } from "lucide-react";
 import {
   useGetProductByNameQuery,
@@ -711,15 +712,17 @@ const ProductDetailsPage = () => {
                 <span className="font-semibold">Year of Establishment</span>
                 <span>{seller.year_of_establishment}</span>
                 {seller?.domain_name && (
-                  <a
-                    href={`https://${seller.domain_name}`}
-                    target="_blank"
-                    rel="noopener noreferrer nofollow"
-                    className="text-[#0c6180] hover:underline text-sm inline-flex items-center gap-1.5 mt-0.5"
-                  >
-                    <span className="text-base">↗</span>
-                    {seller.domain_name}
-                  </a>
+                  <div className="mt-2">
+                    <a
+                      href={`https://${seller.domain_name}`}
+                      target="_blank"
+                      rel="noopener noreferrer nofollow"
+                      className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-[#0c1f4d] border border-blue-100 rounded-lg text-xs font-bold hover:bg-[#0c1f4d] hover:text-white hover:shadow-md transition-all duration-300 group"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5 group-hover:rotate-12 transition-transform" />
+                      Visit Website: {seller.domain_name}
+                    </a>
+                  </div>
                 )}
               </div>
             </div>

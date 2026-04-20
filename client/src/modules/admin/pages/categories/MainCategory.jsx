@@ -76,7 +76,7 @@ const MainCategory = () => {
           }}
           editingCategory={editingCategory}
           onSave={handleSave}
-          refetchList={categoryRefetch} // <-- pass refetch to modal
+          refetchList={categoryRefetch} 
         />
       </div>
     </div>

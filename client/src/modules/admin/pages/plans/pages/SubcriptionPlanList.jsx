@@ -99,7 +99,7 @@ const SubscriptionPlanlist = () => {
                 <TableCell className="flex justify-end gap-2">
                   <TooltipProvider>
                     <div className="flex space-x-2">
-                      {/* Edit Plan Button with Tooltip */}
+    
                       <Tooltip>
                         <TooltipTrigger>
                           <Button
@@ -115,11 +115,11 @@ const SubscriptionPlanlist = () => {
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Edit Plan</p> {/* Tooltip Content for Edit Plan */}
+                          <p>Edit Plan</p> 
                         </TooltipContent>
                       </Tooltip>
 
-                      {/* Delete Plan Button with Tooltip */}
+
                       <Tooltip>
                         <TooltipTrigger>
                           <Button
@@ -132,7 +132,7 @@ const SubscriptionPlanlist = () => {
                           </Button>
                         </TooltipTrigger>
                         <TooltipContent>
-                          <p>Delete Plan</p> {/* Tooltip Content for Delete Plan */}
+                          <p>Delete Plan</p>
                         </TooltipContent>
                       </Tooltip>
                     </div>

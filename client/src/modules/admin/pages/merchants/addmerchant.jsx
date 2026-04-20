@@ -227,7 +227,7 @@ const MultiStepModal = ({ open, onOpenChange, onSubmit, onRefresh }) => {
             setError={setError}
             handleNext={handleNext}
             handleBack={handleBack}
-            onSuccess={onRefresh} // Pass onRefresh as onSuccess
+            onSuccess={onRefresh} 
           />
         );
       default:
@@ -235,7 +235,7 @@ const MultiStepModal = ({ open, onOpenChange, onSubmit, onRefresh }) => {
     }
   };
 
-  // Render stepper with shadcn/ui and Tailwind CSS, including lines between all steps
+
   const renderStepper = () => {
     const steps = ["Search User", "Contact Info", "Travel Details", "Verification", "Confirmation"];
     return (

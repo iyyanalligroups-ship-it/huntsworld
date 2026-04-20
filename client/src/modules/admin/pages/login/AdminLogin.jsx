@@ -23,16 +23,6 @@ const AdminLogin = () => {
   const otpRefs = [useRef(), useRef(), useRef(), useRef()];
   const [loginWithEmail, { isLoading, error }] = useLoginWithEmailMutation();
   const [fetchUserById] = useLazyGetUserByIdQuery();
-  // Validate Email Login
-
-
-
-  // useEffect(() => {
-  //   if (user) {
-  //     navigate(roleBasedRoutes[user.role] || "/");
-  //   }
-  // }, [user, navigate]);
-
   const validateEmailLogin = () => {
     let newErrors = {};
     if (!form.email) newErrors.email = "Email is required";
@@ -41,21 +31,20 @@ const AdminLogin = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Validate Mobile Number
   const isValidMobile = (number) => /^[6-9]\d{9}$/.test(number);
 
-  // Handle Login Submission
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (loginType === "email") {
       if (validateEmailLogin()) {
         try {
-          // Call login API
+        
           const response = await loginWithEmail({
             email: form.email,
             password: form.password,
-            isAdminLogin: true, // 👈 Send this field
+            isAdminLogin: true,
           }).unwrap();
 
 
@@ -66,12 +55,12 @@ const AdminLogin = () => {
           const token = response.data;
           sessionStorage.setItem("token", token);
 
-          // Decode JWT to get user ID
+       
           const decodedToken = jwtDecode(token);
           const userId = decodedToken?.userId;
 
           if (userId) {
-            // Fetch user details after login
+            
             const { data: userResponse } = await fetchUserById(userId);
             login(userResponse, token);
           } else {
@@ -88,24 +77,23 @@ const AdminLogin = () => {
     }
   };
 
-  // Handle OTP Input Change
+  
   const handleOtpChange = (index, value) => {
-    if (!/^\d?$/.test(value)) return; // Only allow numbers
+    if (!/^\d?$/.test(value)) return;
     let newOtp = [...form.otp];
     newOtp[index] = value;
     setForm({ ...form, otp: newOtp });
 
-    // Move focus forward
     if (value && index < 3) otpRefs[index + 1].current.focus();
   };
 
-  // Handle OTP Send/Resend
+
   const handleSendOtp = () => {
-    setIsOtpShow(true); // Show OTP fields & hide mobile input
-    setForm({ ...form, otp: ["", "", "", ""] }); // Clear OTP input
+    setIsOtpShow(true); 
+    setForm({ ...form, otp: ["", "", "", ""] }); 
   };
 
-  // Handle OTP Backspace (Move focus back)
+
   const handleOtpKeyDown = (index, e) => {
     if (e.key === "Backspace" && !form.otp[index] && index > 0) {
       otpRefs[index - 1].current.focus();
@@ -119,13 +107,10 @@ const AdminLogin = () => {
     <section className="flex justify-center items-center h-screen bg-gray-100">
 
       <div className="grid grid-cols-2 w-full max-w-4xl shadow-lg bg-white rounded-lg overflow-hidden">
-        {/* Left - Login Form */}
         <div className="flex flex-col justify-center items-center p-8">
           <h2 className="text-2xl font-semibold text-gray-800 text-center">
             Huntsworld Admin Login
           </h2>
-
-          {/* Toggle Login Type */}
           <div className="flex gap-4 mt-4">
             <Button
               onClick={() => {
@@ -148,7 +133,6 @@ const AdminLogin = () => {
               Login With OTP
             </Button>
           </div>
-
           {/* Email/Password Login */}
           {loginType === "email" && (
             <form
@@ -186,10 +170,10 @@ const AdminLogin = () => {
             </form>
           )}
 
-          {/* Mobile OTP Login */}
+
           {loginType === "otp" && (
             <div className="mt-4 space-y-4 w-full max-w-sm">
-              {/* Mobile Number Input - Hide if OTP is sent */}
+ 
               {!isOtpShow && (
                 <>
                   <Input
@@ -213,7 +197,7 @@ const AdminLogin = () => {
                 </>
               )}
 
-              {/* OTP Input Boxes & Resend OTP Button */}
+           
               {isOtpShow && (
                 <>
                   <div className="flex gap-2 justify-center">
@@ -232,15 +216,15 @@ const AdminLogin = () => {
                     ))}
                   </div>
 
-                  {/* Resend OTP Button */}
+                
                   <Button
-                    onClick={handleSendOtp} // Resend OTP
+                    onClick={handleSendOtp} 
                     className="w-full bg-gray-500 text-white py-2 rounded-md mt-3  cursor-pointer"
                   >
                     Resend OTP
                   </Button>
 
-                  {/* Verify OTP Button */}
+             
                   {form.otp.every((digit) => digit !== "") && (
                     <Button
                       type="submit"
@@ -256,7 +240,6 @@ const AdminLogin = () => {
           )}
         </div>
 
-        {/* Right - Description Section */}
         <div className="flex flex-col justify-center items-center bg-[#0c1f4d] text-white p-8">
           <h2 className="text-2xl font-semibold">Welcome to ExpoB2B</h2>
           <p className="text-center mt-3">

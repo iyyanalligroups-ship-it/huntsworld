@@ -14,14 +14,14 @@ import {
   useGetUserTrustSealStatusQuery,
   useGetTrustSealRequestsQuery,
   useGetTrustSealPriceQuery,
-  useGetMerchantTrustSealDetailsQuery, // Assuming this new query is added to the API slice for fetching detailed merchant data including address
+  useGetMerchantTrustSealDetailsQuery,
 } from '@/redux/api/TrustSealRequestApi';
 import AdminTrustSealPlanManagement from './AdminTrustSealPlanManagement';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { format } from 'date-fns';
-import TrustSealCertificate from './TrustSealCertificate'; // New component import
+import TrustSealCertificate from './TrustSealCertificate';
 
 const AdminTrustSealManagement = () => {
   const { user } = useContext(AuthContext);
@@ -52,7 +52,6 @@ const AdminTrustSealManagement = () => {
     await Promise.all([refetchTrustSeal(), refetchActiveRequests()]);
   };
 
-  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
@@ -60,7 +59,6 @@ const AdminTrustSealManagement = () => {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Set selected user based on search results
   useEffect(() => {
     if (searchResults?.length > 0) {
       setSelectedTargetUser(searchResults[0]);
@@ -83,12 +81,12 @@ const AdminTrustSealManagement = () => {
   const paginatedData = activeRequestsData?.data || [];
   const totalPages = activeRequestsData ? Math.ceil(activeRequestsData.total / limit) : 1;
 
-  // Format date to professional style
+
   const formatDate = (date) => {
     return format(new Date(date), 'dd MMM yyyy, HH:mm');
   };
 
-  // Map status to badge variants and icons
+ 
   const getStatusBadge = (status) => {
     switch (status?.toLowerCase()) {
       case 'verified':
@@ -118,7 +116,6 @@ const AdminTrustSealManagement = () => {
     }
   };
 
-  // Map payment status to badge variants and icons
   const getPaymentStatusBadge = (paymentStatus) => {
     switch (paymentStatus?.toLowerCase()) {
       case 'paid':
@@ -235,7 +232,7 @@ const AdminTrustSealManagement = () => {
                     ) : (
                       <TrustSealCertificate
                         companyName={merchantDetails?.companyName || selectedTargetUser.name}
-                        address={merchantDetails?.address?.fullAddress || 'N/A'} // Assuming address model returns fullAddress or similar
+                        address={merchantDetails?.address?.fullAddress || 'N/A'}
                         director={merchantDetails?.director || 'N/A'}
                         gstin={merchantDetails?.gstin || 'N/A'}
                         iec={merchantDetails?.iec || 'N/A'}

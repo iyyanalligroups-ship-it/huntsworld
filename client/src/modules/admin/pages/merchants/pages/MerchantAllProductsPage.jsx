@@ -47,7 +47,7 @@ const MerchantAllProductPage = () => {
     page,
     filter,
     search,
-    user_id: user?.user?._id, // Pass user ID to fetch products for the logged-in merchant
+    user_id: user?.user?._id,
   });
 
   useEffect(() => {
@@ -183,11 +183,7 @@ const MerchantAllProductPage = () => {
                   <TableCell>{product.super_sub_category_id?.super_sub_category_name || "N/A"}</TableCell>
                   <TableCell>{product.deep_sub_category_id?.deep_sub_category_name || "N/A"}</TableCell>
                   <TableCell>
-                    {/* <img
-                      src={product.product_image?.[0] || "/placeholder-image.jpg"}
-                      alt="Product"
-                      className="w-12 h-12 object-cover rounded"
-                    /> */}
+              
                     {product.product_name}
                   </TableCell>
                   <TableCell>{product.product_verified_by_admin ? "Yes" : "No"}</TableCell>

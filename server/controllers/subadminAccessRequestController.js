@@ -3,70 +3,8 @@ const User = require('../models/userModel');
 const Role = require("../models/roleModel")
 const axios = require('axios');
 
-// Request access to pages with specific actions
-// exports.requestAccess = async (req, res) => {
-//   try {
-//     const { requester_id, permissions } = req.body;
 
-//     // Validate inputs
-//     if (!requester_id || !permissions || !Array.isArray(permissions) || permissions.length === 0) {
-//       return res.status(400).json({ message: 'Missing or invalid required fields: requester_id or permissions.' });
-//     }
 
-//     // Validate permissions structure
-//     for (const perm of permissions) {
-//       if (!perm.page || !perm.actions || !Array.isArray(perm.actions) || perm.actions.length === 0) {
-//         return res.status(400).json({ message: 'Each permission must have a page and non-empty actions array.' });
-//       }
-//       for (const action of perm.actions) {
-//         if (!['edit', 'delete'].includes(action)) {
-//           return res.status(400).json({ message: `Invalid action: ${action}. Must be 'edit' or 'delete'.` });
-//         }
-//       }
-//     }
-
-//     // Check if requester exists and is a subadmin
-//     const requester = await User.findById(requester_id).populate('role');
-//     if (!requester || !requester.role || requester.role.role !== 'SUB_ADMIN') {
-//       return res.status(404).json({ message: 'Requester not found or not authorized.' });
-//     }
-
-//     // Check for existing pending request
-//     const existingRequest = await AccessRequest.findOne({
-//       requester_id,
-//       status: 'pending',
-//     });
-
-//     if (existingRequest) {
-//       return res.status(400).json({ message: 'A pending access request already exists.' });
-//     }
-
-//     // Create new request
-//     const request = new AccessRequest({
-//       requester_id,
-//       permissions,
-//     });
-
-//     await request.save();
-
-//     // Emit real-time notification to admins room
-//     const permissionMessage = permissions.map(p => `${p.page} (${p.actions.join(', ')})`).join(', ');
-//     global.io.of('/access-request-notifications').to('admins').emit('newAccessRequest', {
-//       _id: request._id,
-//       requester_id: requester_id,
-//       requester_name: requester.name,
-//       permissions,
-//       message: `New access request from ${requester.name} for: ${permissionMessage}.`,
-//       created_at: request.request_date,
-//       is_read: false,
-//     });
-
-//     res.status(201).json({ message: 'Access request sent.' });
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).json({ message: 'Server error.' });
-//   }
-// };
 
 exports.requestAccess = async (req, res) => {
   try {

@@ -13,10 +13,9 @@ export default function ChatPage() {
   const { isSidebarOpen, toggleSidebar } = useSidebar();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [searchParams] = useSearchParams();
-  const [selectedUser, setSelectedUser] = useState(null); // Local UI state
-  const { setSelectedUser: setGlobalSelectedUser } = useSelectedUser(); // Global sync
+  const [selectedUser, setSelectedUser] = useState(null);
+  const { setSelectedUser: setGlobalSelectedUser } = useSelectedUser();
 
-  // Handle userId from query params (notifications)
   useEffect(() => {
     const userIdFromQuery = searchParams.get("userId");
     if (userIdFromQuery) {
@@ -36,7 +35,7 @@ export default function ChatPage() {
 
   const handleUserSelect = (user) => {
     setSelectedUser(user);
-    setGlobalSelectedUser(user); // Sync for unread count logic
+    setGlobalSelectedUser(user);
     if (isSheetOpen) {
       setIsSheetOpen(false);
       toggleSidebar();
@@ -51,19 +50,16 @@ export default function ChatPage() {
         isSidebarOpen ? "lg:pl-0" : "lg:pl-0"
       )}
     >
-      {/* Mobile: Sheet (triggered by Header) */}
       <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
         <SheetContent side="left" className="w-[300px] p-0 border-r-0">
           <Sidebar selectedUser={selectedUser} setSelectedUser={handleUserSelect} />
         </SheetContent>
       </Sheet>
 
-      {/* Desktop: Sidebar */}
       <div className="hidden lg:block w-[400px] h-full bg-white border-r-[6px] border-[#f8fafc] z-10">
         <Sidebar selectedUser={selectedUser} setSelectedUser={handleUserSelect} />
       </div>
 
-      {/* Main content area */}
       <div className="flex flex-col flex-1 bg-white overflow-hidden">
         <Header onMenuClick={() => setIsSheetOpen(true)} />
         <ChatWindow selectedUser={selectedUser} />

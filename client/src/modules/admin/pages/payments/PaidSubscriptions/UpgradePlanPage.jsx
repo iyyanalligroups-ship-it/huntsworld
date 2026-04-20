@@ -1,5 +1,3 @@
-// Updated UpgradePlanPage to include PurchasedSellersTable and pre-select seller if passed in state
-
 import { useState, useContext, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -38,11 +36,10 @@ const UpgradePlanPage = () => {
   const oldSubscriptionId = state?.oldSubscriptionId;
   const preSelectedSellerId = state?.selectedSellerId;
 
-  // If pre-selected seller from table, set it
   useEffect(() => {
     if (preSelectedSellerId) {
-      // Fetch seller details if needed, but for simplicity, assume we set ID and fetch if necessary
-      setSelectedSeller({ _id: preSelectedSellerId }); // Extend with actual fetch if needed
+
+      setSelectedSeller({ _id: preSelectedSellerId });
     }
   }, [preSelectedSellerId]);
 

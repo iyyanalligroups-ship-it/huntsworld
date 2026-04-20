@@ -50,7 +50,7 @@ const SuperSubCategoryList = () => {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        {/* <h2 className="text-xl font-semibold">Super Sub-Categories</h2> */}
+
         <div className="flex gap-2">
           <Input
             placeholder="Search Super Sub-Category..."
@@ -58,7 +58,6 @@ const SuperSubCategoryList = () => {
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-64"
           />
-          {/* <Button onClick={() => setOpenForm(true)}>Add New</Button> */}
         </div>
       </div>
 

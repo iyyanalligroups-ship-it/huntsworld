@@ -43,7 +43,7 @@ const RedeemPointsForm = ({ adminId, userId, coupons, walletPoints, onSuccess })
         redeem_point: parseInt(formData.redeem_point),
         coupon_code: `COUPON-${uuidv4()}`,
         reason: formData.reason,
-        admin_id: adminId, // Include adminId for notification
+        admin_id: adminId,
       }).unwrap();
 
       showToast('Points redeemed successfully!', 'success');

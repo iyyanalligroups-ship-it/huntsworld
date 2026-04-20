@@ -391,17 +391,7 @@ const Profile = ({ userId }) => {
               {safeFormData.name ? safeFormData.name.charAt(0).toUpperCase() : "U"}
             </AvatarFallback>
           </Avatar>
-          {/* {profileImage && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => handleDeleteImage(safeFormData?.profile_pic || "")}
-              disabled={isDeleting}
-              className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
-            >
-              <Trash2 className="w-4 h-4" />
-            </Button>
-          )} */}
+
           <div className="absolute inset-0 rounded-full bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         </div>
 

@@ -1,13 +1,13 @@
-// src/modules/admin/components/chat/helper/UserListItemWithLastMessage.jsx
+
 import { useGetLastMessageBetweenUsersQuery } from "@/redux/api/MessageApi";
-import UserListItem from "../UserListItem"; // Adjust path if needed: "../UserListItem" or "./UserListItem"
+import UserListItem from "../UserListItem";
 import { useEffect } from "react";
 
 export default function UserListItemWithLastMessage({
   user,
   currentUserId,
   selectedUser,
-  onSelect, // or setSelectedUser if you pass it directly
+  onSelect, 
   unreadCount,
 }) {
   const { data: lastMsgData, isLoading, refetch } = useGetLastMessageBetweenUsersQuery(
@@ -20,7 +20,6 @@ export default function UserListItemWithLastMessage({
     }
   );
 
-  // Determine the actual last message and time (fallback to API if local user prop is incomplete)
   const lastMessage = user.lastMessageDeleted || lastMsgData?.deleted
     ? "This message was deleted"
     : user.lastMessage !== undefined && user.lastMessage !== null
@@ -31,7 +30,7 @@ export default function UserListItemWithLastMessage({
 
   const lastMessageDeleted = user.lastMessageDeleted || lastMsgData?.deleted || false;
 
-  // Refetch if local data seems incomplete
+ 
   useEffect(() => {
     if (!user.lastMessage && !user.lastMessageDeleted && !isLoading && !lastMsgData) {
       refetch();

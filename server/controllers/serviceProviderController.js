@@ -298,76 +298,8 @@ exports.deleteServiceProvider = async (req, res) => {
     });
   }
 };
-// exports.createMinimalServiceProvider = async (req, res) => {
-//   try {
-//     const { company_email, company_phone_number, travels_name, user_id } = req.body;
 
-//     // Basic validation
-//     if (!company_email || !company_phone_number || !travels_name || !user_id) {
-//       return res.status(400).json({ message: 'Missing required fields' });
-//     }
 
-//     // Check if service provider already exists
-//     const existingProvider = await ServiceProvider.findOne({ user_id });
-//     if (existingProvider) {
-//       return res.status(400).json({ message: 'Service provider profile already exists for this user' });
-//     }
-
-//     // Validate email
-//     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//     if (!emailRegex.test(company_email)) {
-//       return res.status(400).json({ message: 'Invalid email format' });
-//     }
-
-//     // Find SERVICE_PROVIDER role
-//     const serviceProviderRole = await Role.findOne({ role: 'SERVICE_PROVIDER' });
-//     if (!serviceProviderRole) {
-//       return res.status(500).json({ message: "SERVICE_PROVIDER role not found" });
-//     }
-
-//     // Update user's role
-//     const user = await User.findByIdAndUpdate(
-//       user_id,
-//       { role: serviceProviderRole._id, updated_at: new Date() },
-//       { new: true }
-//     );
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User not found" });
-//     }
-
-//     // Create new service provider
-//     const newProvider = new ServiceProvider({
-//       user_id,
-//       company_email,
-//       company_phone_number,
-//       travels_name,
-//       verified_status: false,
-//       trust_shield: false,
-//     });
-//     await newProvider.save();
-
-//     return res.status(201).json({
-//       message: 'Minimal service provider profile created successfully and user role updated to SERVICE_PROVIDER',
-//       provider: newProvider,
-//       user: {
-//         user_id: user._id,
-//         name: user.name,
-//         email: user.email,
-//         phone: user.phone,
-//         role: serviceProviderRole.role
-//       },
-//       forceLogout: true
-//     });
-
-//   } catch (error) {
-//     console.error('Error creating minimal service provider:', error);
-//     return res.status(500).json({
-//       message: 'Server error while creating service provider profile',
-//       error: error.message
-//     });
-//   }
-// };
 
 exports.createMinimalServiceProvider = async (req, res) => {
   try {

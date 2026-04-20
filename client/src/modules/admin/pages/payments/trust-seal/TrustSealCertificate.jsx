@@ -1,4 +1,3 @@
-// TrustSealCertificate.jsx
 import { format } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
@@ -26,7 +25,7 @@ const TrustSealCertificate = ({
     const pdf = new jsPDF("p", "mm", "a4");
     const imgData = canvas.toDataURL("image/png");
 
-    const margin = 8; // 8mm margin
+    const margin = 8; 
     const pageWidth = 210;
     const pageHeight = 297;
     const imgWidth = pageWidth - margin * 2;
@@ -42,7 +41,7 @@ const TrustSealCertificate = ({
 
   return (
     <div style={{ position: "relative", backgroundColor: "rgb(255,255,255)",height:"600px",overflowY:"auto" }}>
-      {/* Download Button */}
+
       <div style={{ position: "", left: "20px", top: "40px" }}>
          <Button
           onClick={downloadCertificate}
@@ -54,12 +53,12 @@ const TrustSealCertificate = ({
         </Button>
       </div>
 
-      {/* Certificate Content */}
+
       <div
         ref={certificateRef}
         id="certificate"
         style={{
-          border: "2px solid rgb(202, 138, 4)", // yellow-600
+          border: "2px solid rgb(202, 138, 4)",
           borderRadius: "8px",
           padding: "24px",
           backgroundColor: "rgb(255,255,255)",
@@ -80,7 +79,7 @@ const TrustSealCertificate = ({
             textAlign: "center",
             fontSize: "1.5rem",
             fontWeight: "bold",
-            color: "rgb(31,41,55)", // gray-800
+            color: "rgb(31,41,55)",
             marginTop: "2rem",
           }}
         >
@@ -101,7 +100,7 @@ const TrustSealCertificate = ({
         <p
           style={{
             textAlign: "center",
-            color: "rgb(75,85,99)", // gray-600
+            color: "rgb(75,85,99)",
           }}
         >
           {address.split(", ").slice(-2).join(", ")}
@@ -120,7 +119,7 @@ const TrustSealCertificate = ({
         <hr
           style={{
             margin: "1rem 0",
-            borderColor: "rgb(209,213,219)", // gray-300
+            borderColor: "rgb(209,213,219)",
           }}
         />
 
@@ -171,7 +170,7 @@ const TrustSealCertificate = ({
           <div
             style={{
               display: "inline-block",
-              backgroundColor: "rgb(239,68,68)", // red-500
+              backgroundColor: "rgb(239,68,68)",
               color: "rgb(255,255,255)",
               fontWeight: "bold",
               padding: "8px",
@@ -183,7 +182,7 @@ const TrustSealCertificate = ({
           <p
             style={{
               fontSize: "0.75rem",
-              color: "rgb(107,114,128)", // gray-500
+              color: "rgb(107,114,128)", 
               marginTop: "0.5rem",
             }}
           >

@@ -1,4 +1,4 @@
-// src/components/ui/Badge.jsx
+
 import { useEffect, useState } from "react";
 
 
@@ -6,7 +6,6 @@ export default function Badge({ count }) {
   const [prevCount, setPrevCount] = useState(count);
   const [pulse, setPulse] = useState(false);
 
-  // Trigger pulse animation when count increases
   useEffect(() => {
     if (count > prevCount && count > 0) {
       setPulse(true);

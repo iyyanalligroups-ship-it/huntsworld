@@ -40,7 +40,7 @@ router.get(
   getProductBySellerId
 );
 router.get("/show-in-product-wise", getAllProductsPaginated);
-// router.get("/fetch-products-by-idss/:id", getProductById);
+
 router.put("/update-products/:id", updateProduct);
 router.delete("/delete-products/:id", deleteProduct);
 

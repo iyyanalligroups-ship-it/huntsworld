@@ -67,8 +67,8 @@ const SubscriptionPlans = () => {
                     <Button
                         className="bg-[#0c1f4d] hover:bg-[#0c1f4dcb] cursor-pointer"
                         onClick={() => {
-                            setEditData(null); // Reset editData first
-                            setFormOpen(true); // Then open the modal
+                            setEditData(null); 
+                            setFormOpen(true); 
                         }}
                     >
                         + Add Plan

@@ -1,7 +1,3 @@
-// Updated Merchant Controller: controllers/merchantController.js
-// Added new function createMinimalMerchant
-// Other functions remain unchanged, only appending the new one at the end
-
 const mongoose = require("mongoose");
 const Merchant = require("../models/MerchantModel");
 const User = require("../models/userModel");
@@ -70,7 +66,7 @@ exports.createMerchant = async (req, res) => {
       company_email,
       company_name,
       aadhar,
-      company_type,               // ← now can be string or ObjectId
+      company_type,
       company_phone_number,
       number_of_employees,
       year_of_establishment,
@@ -81,6 +77,7 @@ exports.createMerchant = async (req, res) => {
       msme_certificate_number,
       pan,
       domain_name,
+      company_video,
     } = req.body;
 
     // VALIDATIONS
@@ -147,7 +144,7 @@ exports.createMerchant = async (req, res) => {
       company_email,
       company_name,
       aadhar,
-      company_type: companyTypeId,          // ← now ObjectId or null
+      company_type: companyTypeId,
       company_phone_number,
       number_of_employees,
       year_of_establishment,
@@ -158,6 +155,7 @@ exports.createMerchant = async (req, res) => {
       msme_certificate_number,
       pan,
       domain_name,
+      company_video,
     });
 
     // Cross-model verification sync
@@ -234,21 +232,6 @@ exports.checkAadhar = async (req, res) => {
   }
 };
 
-// ... (other controller functions remain unchanged)
-// exports.getAllMerchants = async (req, res) => {
-//   try {
-//     const merchants = await Merchant.find()
-//       // CRITICAL: Added 'isActive' to the select string
-//       .populate({ path: "user_id", select: "name email phone_number isActive" })
-//       .populate({
-//         path: "address_id",
-//         select: "street city state country postal_code",
-//       });
-//     res.status(200).json(merchants);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 
 exports.getMerchantByEmailOrPhone = async (req, res) => {
   const { email, phone, page = 1, limit = 10 } = req.query;
@@ -332,114 +315,7 @@ exports.getMerchantByEmailOrPhone = async (req, res) => {
     });
   }
 };
-// exports.getMerchantById = async (req, res) => {
-//   try {
-//     const merchant = await Merchant.findById(req.params.id)
-//       .populate({ path: "user_id", select: "name email phone_number" })
-//       .populate({
-//         path: "address_id",
-//         select: "street city state country postal_code",
-//       });
-//     if (!merchant)
-//       return res.status(404).json({ message: "Merchant not found" });
-//     res.status(200).json(merchant);
-//   } catch (error) {
-//     res.status(500).json({ error: error.message });
-//   }
-// };
 
-
-// exports.updateMerchant = async (req, res) => {
-//   try {
-//     const merchant = await Merchant.findById(req.params.id);
-//     if (!merchant) {
-//       return res.status(404).json({ success: false, message: "Merchant not found" });
-//     }
-
-//     const updates = req.body;
-
-//     // ──────────────────────────────────────────────────────────────
-//     // PHONE NUMBER VALIDATION (only if phone is being changed)
-//     // ──────────────────────────────────────────────────────────────
-//     if (updates.company_phone_number) {
-//       const newPhone = updates.company_phone_number.trim();
-
-//       // Skip if same as current
-//       if (newPhone === merchant.company_phone_number) {
-//         // still allow update, just no extra check needed
-//       } else {
-//         // Validate format (assuming 10-digit Indian number)
-//         if (!/^\d{10}$/.test(newPhone)) {
-//           return res.status(400).json({
-//             success: false,
-//             message: "Please enter a valid 10-digit phone number"
-//           });
-//         }
-
-//         // Check across all models
-//         const [existingUser, existingMerchant, existingGrocery] = await Promise.all([
-//           // User.findOne({ phone: newPhone }),
-//           Merchant.findOne({ company_phone_number: newPhone }),
-//           GrocerySeller.findOne({ shop_phone_number: newPhone })
-//         ]);
-
-//         // Another merchant already using this number
-//         if (existingMerchant && existingMerchant._id.toString() !== merchant._id.toString()) {
-//           return res.status(400).json({
-//             success: false,
-//             message: "This phone number is already registered with another Merchant"
-//           });
-//         }
-
-//         // Used in User model
-//         if (existingUser) {
-//           return res.status(400).json({
-//             success: false,
-//             message: "This phone number is already registered as a User"
-//           });
-//         }
-
-//         // Used in GrocerySeller / Base Member
-//         if (existingGrocery) {
-//           return res.status(400).json({
-//             success: false,
-//             message: "This phone number is already registered with a Grocery Seller / Base Member profile"
-//           });
-//         }
-
-//         // If we reached here → phone is available → safe to update
-//         merchant.company_phone_number = newPhone;
-//       }
-//     }
-//     // ──────────────────────────────────────────────────────────────
-
-//     // Update all other provided fields
-//     Object.keys(updates).forEach((key) => {
-//       // Skip phone if we already handled it above
-//       if (key !== "company_phone_number") {
-//         merchant[key] = updates[key];
-//       }
-//     });
-
-//     // Update last activity
-//     merchant.last_activity = new Date();
-
-//     await merchant.save(); // triggers progress calculation
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Merchant updated successfully",
-//       data: merchant,
-//     });
-
-//   } catch (error) {
-//     console.error("Error updating merchant:", error);
-//     return res.status(400).json({
-//       success: false,
-//       message: error.message || "Failed to update merchant"
-//     });
-//   }
-// };
 
 
 exports.updateMerchant = async (req, res) => {
@@ -510,7 +386,7 @@ exports.updateMerchant = async (req, res) => {
     const businessFields = [
       "company_name", "company_email", "company_phone_number", 
       "gst_number", "msme_certificate_number", "pan", "aadhar", 
-      "description", "domain_name", "company_type"
+      "description", "domain_name", "company_type", "company_video"
     ];
 
     let businessDetailsChanged = false;
@@ -705,7 +581,8 @@ exports.createMinimalMerchant = async (req, res) => {
       domain_name, 
       company_type,
       gst_number,
-      msme_certificate_number
+      msme_certificate_number,
+      company_video
     } = req.body;
 
     if (!user_id || !company_name || !company_phone_number) {
@@ -830,9 +707,10 @@ exports.createMinimalMerchant = async (req, res) => {
       company_email: company_email.trim().toLowerCase(),
       company_phone_number: normalizedPhone,
       domain_name: domain_name ? domain_name.trim().toLowerCase() : undefined,
-      company_type: companyTypeId,           // ← now supports ObjectId
+      company_type: companyTypeId,
       gst_number: gst_number ? gst_number.trim() : undefined,
       msme_certificate_number: msme_certificate_number ? msme_certificate_number.trim() : undefined,
+      company_video,
       slug: normalizedName.toLowerCase().replace(/\s+/g, "-").trim(),
     });
 
@@ -1113,7 +991,7 @@ exports.lookupUserForMerchantCreation = async (req, res) => {
 
 exports.createMinimalMerchantByUserId = async (req, res) => {
   try {
-    const { user_id, company_name, company_email, company_phone_number } = req.body;
+    const { user_id, company_name, company_email, company_phone_number, company_video } = req.body;
 
     // Validate required fields
     if (!user_id || !company_name || !company_phone_number) {
@@ -1173,6 +1051,7 @@ exports.createMinimalMerchantByUserId = async (req, res) => {
       company_name,
       company_email: company_email && company_email.trim() ? company_email.trim().toLowerCase() : undefined,
       company_phone_number,
+      company_video,
       verified_status: false,
       trustshield: false
     });

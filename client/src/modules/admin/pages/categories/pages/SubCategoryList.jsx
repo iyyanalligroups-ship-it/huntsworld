@@ -13,7 +13,7 @@ import {toast} from "react-toastify";
 export default function SubCategoryList({ onEdit, setRefetch }) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
-  const [viewMode, setViewMode] = useState("list"); // 'list' | 'grid'
+  const [viewMode, setViewMode] = useState("list"); 
   const limit = 10;
 
   const {
@@ -63,7 +63,6 @@ console.log(data,"total");
 
   return (
     <div className="w-full">
-      {/* Top Controls */}
       <div className="flex justify-between items-center mb-4 flex-wrap gap-4">
         <Input
           type="text"

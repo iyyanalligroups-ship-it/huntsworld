@@ -16,14 +16,14 @@ const Stepper5 = ({ formData, error, setError, handleNext, handleBack, onSuccess
       import.meta.env.VITE_API_URL || "http://localhost:5000/api/v1"
     }/merchants/create-merchant`;
 
-    // Validate terms acceptance
+
     if (!acceptedTerms) {
       setError("You must accept the terms and conditions.");
       setSubmitting(false);
       return false;
     }
 
-    // Validate user_id
+   
     if (!formData.user_id) {
       setError("User ID is missing. Please ensure a valid user is selected.");
       setSubmitting(false);
@@ -33,10 +33,7 @@ const Stepper5 = ({ formData, error, setError, handleNext, handleBack, onSuccess
     const timestamp = Date.now();
     const uniqueSuffix = `-${timestamp}-${Math.random().toString(36).substr(2, 9)}`;
 
-    // Normalize company_type for backend
     const normalizedCompanyType = formData.company_type === "Sub-dealer" ? "Sub_dealer" : formData.company_type;
-
-    // Prepare merchant payload
     const payload = {
       user_id: formData.user_id || "",
       address_id: formData.addressId || "",
@@ -72,7 +69,6 @@ const Stepper5 = ({ formData, error, setError, handleNext, handleBack, onSuccess
       });
       console.log("Merchant backend response:", merchantResponse.data);
 
-      // Fetch the MERCHANT role
       console.log("Fetching roles from backend...");
       const roleResponse = await axios.get(
         `${
@@ -88,7 +84,6 @@ const Stepper5 = ({ formData, error, setError, handleNext, handleBack, onSuccess
       const merchantRoleId = merchantRole._id;
       console.log("MERCHANT role _id:", merchantRoleId);
 
-      // Update the user's role to MERCHANT
       const token = sessionStorage.getItem("token");
       console.log("Updating user role for user_id:", formData.user_id);
       const userUpdateResponse = await axios.put(
@@ -106,7 +101,6 @@ const Stepper5 = ({ formData, error, setError, handleNext, handleBack, onSuccess
       );
       console.log("User role update response:", userUpdateResponse.data);
 
-      // Call onSuccess to trigger refresh in MerchantList
       if (onSuccess) {
         onSuccess();
       }

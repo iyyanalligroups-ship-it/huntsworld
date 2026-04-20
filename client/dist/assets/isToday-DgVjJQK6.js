@@ -1,1 +1,0 @@
-import{a as u}from"./vendor-react-C8Bl5dty.js";var o={exports:{}},p=o.exports,e;function f(){return e||(e=1,function(s,d){(function(a,r){s.exports=r()})(p,function(){return function(a,r,i){r.prototype.isToday=function(){var t="YYYY-MM-DD",n=i();return this.format(t)===n.format(t)}}})}(o)),o.exports}var x=f();const c=u(x);export{c as i};

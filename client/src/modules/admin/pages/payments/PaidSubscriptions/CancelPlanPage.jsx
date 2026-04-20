@@ -25,16 +25,15 @@ const [debouncedSearch, setDebouncedSearch] = useState("");
    useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedSearch(searchInput.trim());
-        }, 500); // 2 seconds
+        }, 500); 
 
         return () => {
-            clearTimeout(handler); // clear previous timer if user types again
+            clearTimeout(handler); 
         };
     }, [searchInput]);
 
-    // API call only runs when debouncedSearch changes
     const { data: searchResults, isLoading, error } = useGetUserBySearchQuery(debouncedSearch, {
-        skip: !debouncedSearch, // skip empty queries
+        skip: !debouncedSearch, 
     });
 
 
@@ -87,7 +86,7 @@ const [debouncedSearch, setDebouncedSearch] = useState("");
           </p>
         </div>
 
-        {/* Search Input */}
+  
         <div className="mb-6">
           <Label htmlFor="searchInput" className="text-gray-700">Search Seller by Email or Phone</Label>
           <Input
@@ -100,7 +99,7 @@ const [debouncedSearch, setDebouncedSearch] = useState("");
            {isLoading && <p>Loading...</p>}
                     {error && <p>Error fetching users</p>}
 
-                    {/* Selected Seller Info */}
+
                     {selectedSeller && (
                         <div className="p-3 rounded-lg border mt-5 border-gray-300 bg-gray-50">
                             <p className="font-medium">Seller Info:</p>

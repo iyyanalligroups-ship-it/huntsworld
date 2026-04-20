@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useContext } from 'react';
 import { Menu, Bell, ChevronDown, MessageSquare } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -98,9 +96,6 @@ const Header = () => {
           </div>
         </div>
       </header>
-
-      {/* Spacer */}
-      {/* <div className="h-[90px] sm:h-[70px]"></div> */}
     </>
   );
 };

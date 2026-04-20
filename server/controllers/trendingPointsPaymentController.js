@@ -820,29 +820,8 @@ async function getPointRate() {
 }
 
 
-// exports.searchMerchants = async (req, res) => {
-//   try {
-//     const { query } = req.query;
-//     
 
-//     if (!query) {
-//       return res.status(400).json({ message: 'Search query is required' });
-//     }
 
-//     const users = await User.find({
-//       $or: [
-//         { email: { $regex: query, $options: 'i' } },
-//         { phone: { $regex: query, $options: 'i' } },
-//       ],
-
-//     }).select('_id name email phone');
-
-//     res.status(200).json(users);
-//   } catch (error) {
-//     console.error('Search Merchants Error:', error);
-//     res.status(500).json({ message: 'Failed to search merchants', error: error.message });
-//   }
-// };
 
 exports.searchMerchants = async (req, res) => {
   try {

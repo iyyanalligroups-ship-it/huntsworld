@@ -6,9 +6,9 @@ const CustomerPhoneNotificationContext = createContext(undefined);
 
 export const CustomerPhoneNotificationProvider = ({ children }) => {
   const { user } = useContext(AuthContext);
-  const userId = user?.user?._id; // ← customer user id
+  const userId = user?.user?._id;
 
-  const [notifications, setNotifications] = useState([]); // approved / rejected events
+  const [notifications, setNotifications] = useState([]); 
   const socketRef = useRef(null);
 
   useEffect(() => {

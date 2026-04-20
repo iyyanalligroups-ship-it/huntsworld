@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Play, Pause,Download  } from "lucide-react"; // Assuming you use lucide-react
+import { Play, Pause,Download  } from "lucide-react"; 
 
 const CustomAudioPlayer = ({ src }) => {
     const audioRef = useRef(null);
@@ -7,7 +7,6 @@ const CustomAudioPlayer = ({ src }) => {
     const [currentTime, setCurrentTime] = useState(0);
     const [duration, setDuration] = useState(0);
 
-    // Format time (e.g., 125 seconds -> 2:05)
     const formatTime = (time) => {
         if (isNaN(time)) return "0:00";
         const minutes = Math.floor(time / 60);

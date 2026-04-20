@@ -114,29 +114,6 @@ exports.getSubDealerById = async (req, res) => {
 };
 
 
-// exports.createSubDealer = async (req, res) => {
-//   try {
-//     const { email, phone_number, password, gst_number, pan, aadhar } = req.body;
-
-//     // Check for existing email, GST, PAN, Aadhar
-//     const existingSubDealer = await SubDealer.findOne({ 
-//       $or: [{ email }, { gst_number }, { pan }, { aadhar }] 
-//     });
-
-//     if (existingSubDealer) {
-//       return res.status(400).json({ error: "Email, GST, PAN, or Aadhar already exists" });
-//     }
-
-//     // Hash password before saving
-//     const salt = await bcrypt.genSalt(10);
-//     const hashedPassword = await bcrypt.hash(password, salt);
-
-//     const newSubDealer = await SubDealer.create({ ...req.body, password: hashedPassword });
-//     res.status(201).json(newSubDealer);
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// };
 
 
 exports.createSubDealer = async (req, res) => {

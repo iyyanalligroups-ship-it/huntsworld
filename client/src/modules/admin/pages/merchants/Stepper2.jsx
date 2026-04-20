@@ -18,7 +18,7 @@ const Stepper2 = ({ formData, setFormData, error, setError, handleNext, handleBa
   };
 
   const handleSaveAddress = async () => {
-    // Validate required fields
+
     if (
       !formData.user_id ||
       !formData.address_type ||

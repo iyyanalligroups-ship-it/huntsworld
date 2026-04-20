@@ -224,7 +224,7 @@ const MyQueries = () => {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-32">Complaint ID</TableHead>
-                    {/* <TableHead>Title</TableHead> */}
+
                     <TableHead>Type</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Date</TableHead>
@@ -245,9 +245,7 @@ const MyQueries = () => {
                           <TableCell className="font-mono text-xs text-gray-600">
                             {complaint._id.slice(-8)}
                           </TableCell>
-                          {/* <TableCell className="font-medium">
-                            {complaint.details?.title || "No Title Provided"}
-                          </TableCell> */}
+
                           <TableCell className="capitalize">
                             {optionToLabel[complaint.option] ||
                               complaint.option.replace(/_/g, " ")}

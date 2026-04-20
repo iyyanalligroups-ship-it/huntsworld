@@ -339,11 +339,7 @@ const ProductCard = ({
           </div>
 
           {/* Description */}
-          {/* {description && (
-            <p className="text-sm text-slate-500 line-clamp-2 mb-4 leading-relaxed">
-              {description}
-            </p>
-          )} */}
+
 
           {/* Attributes Array Mapping (Max 3) */}
         {attributes && attributes.length > 0 && (
@@ -367,20 +363,7 @@ const ProductCard = ({
 )}
 
           {/* Search Tags */}
-          {/* {searchTags && searchTags.length > 0 && (
-            <div className="flex flex-wrap gap-1 mb-4">
-              {searchTags.slice(0, 3).map((tag, idx) => (
-                <Badge key={idx} variant="secondary" className="bg-slate-100 hover:bg-slate-200 text-slate-500 text-[10px] font-medium border-none capitalize">
-                  #{tag}
-                </Badge>
-              ))}
-              {searchTags.length > 3 && (
-                <Badge variant="secondary" className="bg-slate-100 text-slate-500 text-[10px] font-medium border-none">
-                  +{searchTags.length - 3} more
-                </Badge>
-              )}
-            </div>
-          )} */}
+
 
           <div className="flex-grow" />
 

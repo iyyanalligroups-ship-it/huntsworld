@@ -1,361 +1,3 @@
-// import { useState } from 'react';
-// import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-// import { Button } from '@/components/ui/button';
-// import { Input } from '@/components/ui/input';
-// import { Dialog, DialogContent, DialogHeader, DialogFooter, DialogTitle } from '@/components/ui/dialog';
-// import {
-//   useCreateBannerOrderMutation,
-//   useVerifyBannerPaymentMutation,
-//   useUpgradeBannerMutation,
-//   useCancelBannerMutation,
-//   useCheckUserSubscriptionQuery,
-// } from '@/redux/api/BannerPaymentApi';
-// import { loadRazorpayScript } from '@/modules/merchant/utils/Razorpay';
-// import showToast from '@/toast/showToast';
-
-// import { ShoppingCart, ArrowUpCircle, XCircle } from "lucide-react";
-
-// const BannerPlanManagement = ({ user, selectedSeller, refetchBannerPayments, actionMode }) => {
-//   const [isPurchaseOpen, setIsPurchaseOpen] = useState(false);
-//   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
-//   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
-//   const [isRazorpayLoading, setIsRazorpayLoading] = useState(false);
-//   const [days, setDays] = useState('');
-//   const [amount, setAmount] = useState(0);
-
-//   const [createBannerOrder] = useCreateBannerOrderMutation();
-//   const [verifyBannerPayment] = useVerifyBannerPaymentMutation();
-//   const [upgradeBanner] = useUpgradeBannerMutation();
-//   const [cancelBanner] = useCancelBannerMutation();
-//   const { data: subscriptionData, isLoading: isSubscriptionLoading } = useCheckUserSubscriptionQuery(selectedSeller?.user?._id, {
-//     skip: !selectedSeller?.user?._id,
-//   });
-
-//   const hasSubscription = subscriptionData?.hasSubscription;
-//   const subscriptionId = subscriptionData?.subscriptionId;
-
-//   const handleDaysChange = (e) => {
-//     const inputDays = parseInt(e.target.value, 10);
-//     if (!isNaN(inputDays) && inputDays > 0) {
-//       setDays(inputDays);
-//       setAmount(inputDays * 20);
-//     } else {
-//       setDays('');
-//       setAmount(0);
-//     }
-//   };
-
-//   const handlePurchase = async () => {
-//     try {
-//       if (!days || !amount) throw new Error('Please specify the number of days');
-//       if (!selectedSeller?.user?._id) throw new Error('No seller selected');
-//       if (!hasSubscription) throw new Error('No active subscription found for the seller');
-//       if (!subscriptionId) throw new Error('No subscription ID found');
-//       if (!import.meta.env.VITE_RAZORPAY_KEY_ID) throw new Error('Razorpay key ID is missing');
-
-//       setIsRazorpayLoading(true);
-//       const scriptLoaded = await loadRazorpayScript();
-//       if (!scriptLoaded || !window.Razorpay) {
-//         throw new Error('Failed to load Razorpay script');
-//       }
-
-//       console.log('Creating banner order with:', { user_id: selectedSeller.user._id, days, amount, subscription_id: subscriptionId });
-//       const { order, bannerPayment } = await createBannerOrder({
-//         user_id: selectedSeller.user._id,
-//         days,
-//         amount,
-//         subscription_id: subscriptionId,
-//       }).unwrap();
-
-//       console.log('Order created:', { order, bannerPayment });
-
-//       const options = {
-//         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-//         amount: order.amount,
-//         currency: order.currency,
-//         name: 'Banner Subscription Payment',
-//         description: `Purchasing banner for ${days} days for seller ${selectedSeller.user.email}`,
-//         order_id: order.id,
-//         handler: async (response) => {
-//           try {
-//             console.log('Verifying payment:', response);
-//             const verifyRes = await verifyBannerPayment({
-//               razorpay_payment_id: response.razorpay_payment_id,
-//               razorpay_order_id: response.razorpay_order_id,
-//               razorpay_signature: response.razorpay_signature,
-//             }).unwrap();
-
-//             if (verifyRes.success) {
-//               showToast(`Payment for ${days} days (₹${amount}) completed.`, 'success');
-//               await refetchBannerPayments();
-//             } else {
-//               showToast('Payment verification failed', 'error');
-//             }
-//           } catch (error) {
-//             console.error('Payment verification failed:', error);
-//             showToast(`Error verifying payment: ${error.message}`, 'error');
-//           }
-//         },
-//         prefill: {
-//           email: selectedSeller.user.email || 'demo@example.com',
-//           contact: selectedSeller.user.phone || '9999999999',
-//         },
-//         theme: {
-//           color: '#0c1f4d',
-//         },
-//       };
-
-//       console.log('Opening Razorpay popup with options:', options);
-//       const razorpay = new window.Razorpay(options);
-//       razorpay.on('payment.failed', (response) => {
-//         console.error('Razorpay payment failed:', response);
-//         showToast('Payment failed. Please try again.', 'error');
-//       });
-//       razorpay.open();
-//     } catch (error) {
-//       console.error('Purchase Error:', error);
-//       showToast(`Something went wrong: ${error.message}`, 'error');
-//     } finally {
-//       setIsRazorpayLoading(false);
-//       setIsPurchaseOpen(false);
-//       setDays('');
-//       setAmount(0);
-//     }
-//   };
-
-//   const handleUpgrade = async () => {
-//     try {
-//       if (!days || !amount) throw new Error('Please specify the number of days');
-//       if (!selectedSeller?.user?._id) throw new Error('No seller selected');
-//       if (!selectedSeller?.bannerPayment?._id) throw new Error('No active banner payment selected');
-//       if (!hasSubscription) throw new Error('No active subscription found for the seller');
-//       if (!subscriptionId) throw new Error('No subscription ID found');
-//       if (!import.meta.env.VITE_RAZORPAY_KEY_ID) throw new Error('Razorpay key ID is missing');
-
-//       setIsRazorpayLoading(true);
-//       const scriptLoaded = await loadRazorpayScript();
-//       if (!scriptLoaded || !window.Razorpay) {
-//         throw new Error('Failed to load Razorpay script');
-//       }
-
-//       const bannerData = {
-//         user_id: selectedSeller.user._id,
-//         old_banner_payment_id: selectedSeller.bannerPayment._id,
-//         days,
-//         amount,
-//         subscription_id: subscriptionId,
-//       };
-
-//       console.log('Creating upgrade order with:', bannerData);
-//       const { order } = await upgradeBanner(bannerData).unwrap();
-
-//       console.log('Upgrade order created:', { order });
-//       const options = {
-//         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-//         amount: order.amount,
-//         currency: order.currency,
-//         name: 'Banner Upgrade Payment',
-//         description: `Upgrading banner for ${days} days for seller ${selectedSeller.user.email}`,
-//         order_id: order.id,
-//         handler: async (response) => {
-//           try {
-//             console.log('Verifying upgrade payment:', response);
-//             const verifyRes = await verifyBannerPayment({
-//               razorpay_payment_id: response.razorpay_payment_id,
-//               razorpay_order_id: response.razorpay_order_id,
-//               razorpay_signature: response.razorpay_signature,
-//             }).unwrap();
-
-//             if (verifyRes.success) {
-//               showToast(`Upgraded banner for ${days} days for ₹${amount}`, 'success');
-//               await refetchBannerPayments();
-//             } else {
-//               showToast('Payment verification failed', 'error');
-//             }
-//           } catch (error) {
-//             console.error('Upgrade Verification failed:', error);
-//             showToast(`Error verifying upgrade payment: ${error.message}`, 'error');
-//           }
-//         },
-//         prefill: {
-//           email: selectedSeller.user.email || 'demo@example.com',
-//           contact: selectedSeller.user.phone || '9999999999',
-//         },
-//         theme: {
-//           color: '#0c1f4d',
-//         },
-//       };
-
-//       console.log('Opening Razorpay popup for upgrade with options:', options);
-//       const razorpay = new window.Razorpay(options);
-//       razorpay.on('payment.failed', (response) => {
-//         console.error('Razorpay upgrade payment failed:', response);
-//         showToast('Upgrade payment failed. Please try again.', 'error');
-//       });
-//       razorpay.open();
-//     } catch (error) {
-//       console.error('Upgrade Error:', error);
-//       showToast(`Something went wrong: ${error.message}`, 'error');
-//     } finally {
-//       setIsRazorpayLoading(false);
-//       setIsUpgradeOpen(false);
-//       setDays('');
-//       setAmount(0);
-//     }
-//   };
-
-//   const handleCancel = async () => {
-//     if (!selectedSeller?.bannerPayment?._id) {
-//       showToast('No banner payment selected.', 'error');
-//       setIsCancelDialogOpen(false);
-//       return;
-//     }
-//     try {
-//       await cancelBanner(selectedSeller.bannerPayment._id).unwrap();
-//       showToast('Banner subscription cancelled successfully', 'success');
-//       await refetchBannerPayments();
-//       setIsCancelDialogOpen(false);
-//     } catch (error) {
-//       console.error('Cancel Banner Error:', error);
-//       showToast(`Failed to cancel banner subscription: ${error.message}`, 'error');
-//       setIsCancelDialogOpen(false);
-//     }
-//   };
-
-//   return (
-//     <Card className="border-[#0c1f4d]  rounded-xl shadow-md">
-//       <CardHeader>
-//         <CardTitle className="text-xl font-bold text-[#0c1f4d]">Banner Plan Management</CardTitle>
-//       </CardHeader>
-//       <CardContent className="space-y-4">
-//         <div className="flex gap-3">
-//           {/* Purchase */}
-//           <Button
-//             className="bg-[#0c1f4d] hover:bg-[#0c1f4dcc] text-white"
-//             onClick={() => setIsPurchaseOpen(true)}
-//             disabled={actionMode !== "purchase" || !selectedSeller?.user || isSubscriptionLoading || isRazorpayLoading}
-//             style={{ cursor: actionMode !== "purchase" ? "not-allowed" : "pointer" }}
-//           >
-//             <ShoppingCart className="mr-2 h-4 w-4" />
-//             Purchase Banner Ad
-//           </Button>
-
-//           {/* Upgrade */}
-//           <Button
-//             variant="outline"
-//             onClick={() => setIsUpgradeOpen(true)}
-//             disabled={actionMode !== "upgrade" || !selectedSeller?.bannerPayment || isSubscriptionLoading || isRazorpayLoading}
-//             style={{ cursor: actionMode !== "upgrade" ? "not-allowed" : "pointer" }}
-//           >
-//             <ArrowUpCircle className="mr-2 h-4 w-4" />
-//             Upgrade Plan
-//           </Button>
-
-//           {/* Cancel */}
-//           <Button
-//             className="bg-red-600 hover:bg-red-700 text-white"
-//             onClick={() => setIsCancelDialogOpen(true)}
-//             disabled={actionMode !== "cancel" || !selectedSeller?.bannerPayment || isRazorpayLoading}
-//             style={{ cursor: actionMode !== "cancel" ? "not-allowed" : "pointer" }}
-//           >
-//             <XCircle className="mr-2 h-4 w-4" />
-//             Cancel Plan
-//           </Button>
-//         </div>
-
-//       </CardContent>
-
-//       <Dialog open={isPurchaseOpen} onOpenChange={setIsPurchaseOpen}>
-//         <DialogContent>
-//           <DialogHeader>
-//             <DialogTitle>Purchase Banner Ad</DialogTitle>
-//           </DialogHeader>
-//           <div className="space-y-4">
-//             <Input
-//               type="number"
-//               placeholder="Number of Days (e.g., 30)"
-//               value={days}
-//               onChange={handleDaysChange}
-//               className="w-full"
-//               min="1"
-//               disabled={isRazorpayLoading}
-//             />
-//             <p className="text-sm text-gray-600">Total Cost: ₹{amount} (₹20 per day)</p>
-//           </div>
-//           <DialogFooter>
-//             <Button variant="outline" onClick={() => setIsPurchaseOpen(false)} disabled={isRazorpayLoading}>
-//               Cancel
-//             </Button>
-//             <Button
-//               className="bg-[#0c1f4d] hover:bg-[#0c1f4ddb]"
-//               disabled={!hasSubscription || !days || amount <= 0 || !subscriptionId || isRazorpayLoading}
-//               onClick={handlePurchase}
-//             >
-//               {isRazorpayLoading ? 'Loading Payment...' : 'Proceed to Payment'}
-//             </Button>
-//           </DialogFooter>
-//         </DialogContent>
-//       </Dialog>
-
-//       <Dialog open={isUpgradeOpen} onOpenChange={setIsUpgradeOpen}>
-//         <DialogContent>
-//           <DialogHeader>
-//             <DialogTitle>Upgrade Banner Plan</DialogTitle>
-//           </DialogHeader>
-//           <div className="space-y-4">
-//             <Input
-//               type="number"
-//               placeholder="Number of Days (e.g., 30)"
-//               value={days}
-//               onChange={handleDaysChange}
-//               className="w-full"
-//               min="1"
-//               disabled={isRazorpayLoading}
-//             />
-//             <p className="text-sm text-gray-600">Total Cost: ₹{amount} (₹20 per day)</p>
-//           </div>
-//           <DialogFooter>
-//             <Button variant="outline" onClick={() => setIsUpgradeOpen(false)} disabled={isRazorpayLoading}>
-//               Cancel
-//             </Button>
-//             <Button
-//               className="bg-[#0c1f4d] hover:bg-[#0c1f4ddb]"
-//               disabled={!hasSubscription || !days || amount <= 0 || !subscriptionId || isRazorpayLoading}
-//               onClick={handleUpgrade}
-//             >
-//               {isRazorpayLoading ? 'Loading Payment...' : 'Proceed to Payment'}
-//             </Button>
-//           </DialogFooter>
-//         </DialogContent>
-//       </Dialog>
-
-//       <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-//         <DialogContent>
-//           <DialogHeader>
-//             <DialogTitle>Confirm Cancellation</DialogTitle>
-//           </DialogHeader>
-//           <p>Are you sure you want to cancel the banner subscription for {selectedSeller?.user?.email}?</p>
-//           <DialogFooter>
-//             <Button variant="outline" onClick={() => setIsCancelDialogOpen(false)} disabled={isRazorpayLoading}>
-//               Cancel
-//             </Button>
-//             <Button
-//               className="bg-red-600 text-white hover:bg-red-700"
-//               onClick={handleCancel}
-//               disabled={isRazorpayLoading}
-//             >
-//               Okay
-//             </Button>
-//           </DialogFooter>
-//         </DialogContent>
-//       </Dialog>
-//     </Card>
-//   );
-// };
-
-// export default BannerPlanManagement;
-
-
 import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -408,7 +50,6 @@ const BannerPlanManagement = ({ user, selectedSeller, refetchBannerPayments, act
   const hasSubscription = subscriptionData?.hasSubscription;
   const subscriptionId = subscriptionData?.subscriptionId;
 
-  // Check if seller has active paid banner plan
   const hasActivePaidBanner = !!selectedSeller?.bannerPayment?._id;
   const bannerDaysLeft = selectedSeller?.bannerPayment?.days || 0;
 
@@ -423,7 +64,6 @@ const BannerPlanManagement = ({ user, selectedSeller, refetchBannerPayments, act
     }
   };
 
-  // Free & Paid Banner Upload Handlers (Mock — connect to your API later)
   const handleFreeBannerUpload = () => {
     if (!freeBannerFile) {
       showToast('Please select an image for free banner', 'error');
@@ -596,8 +236,6 @@ const BannerPlanManagement = ({ user, selectedSeller, refetchBannerPayments, act
       </CardHeader>
 
       <CardContent className="p-8 space-y-10">
-
-        {/* FREE BANNER UPLOAD */}
         <div className="rounded-2xl border-2 border-green-400 bg-green-50 p-8">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-bold text-green-800">Free Banner Upload</h3>
@@ -625,7 +263,6 @@ const BannerPlanManagement = ({ user, selectedSeller, refetchBannerPayments, act
           </Button>
         </div>
 
-        {/* PAID BANNER UPLOAD */}
         <div className={`rounded-2xl p-8 border-2 ${hasActivePaidBanner
           ? 'border-blue-500 bg-blue-50 shadow-lg'
           : 'border-dashed border-gray-400 bg-gray-50'}`}>
@@ -683,7 +320,7 @@ const BannerPlanManagement = ({ user, selectedSeller, refetchBannerPayments, act
           )}
         </div>
 
-        {/* ADMIN ACTIONS */}
+
         <div className="pt-8 border-t-4 border-gray-300">
           <h3 className="text-xl font-bold text-[#0c1f4d] mb-6">Admin Payment Actions</h3>
           <div className="flex flex-wrap gap-4">
@@ -716,7 +353,6 @@ const BannerPlanManagement = ({ user, selectedSeller, refetchBannerPayments, act
           </div>
         </div>
 
-        {/* All Dialogs (Unchanged) */}
         <Dialog open={isPurchaseOpen} onOpenChange={setIsPurchaseOpen}>
           <DialogContent>
             <DialogHeader>

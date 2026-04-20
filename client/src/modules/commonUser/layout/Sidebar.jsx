@@ -9,8 +9,8 @@ import {
 import * as Icons from "lucide-react"; // ✅ Unified lucide-react icon set
 import menuItems from "../utils/MenuItem";
 import { useSidebar } from "@/modules/admin/hooks/useSidebar";
-// import bird from "@/assets/images/bird.png";
-// import easyCol from "@/assets/images/merchant-expo-logo.png";
+
+
 
 const Sidebar = () => {
   const { isSidebarOpen, toggleSidebar } = useSidebar();
@@ -100,18 +100,7 @@ const Sidebar = () => {
         } flex flex-col overflow-y-auto`}
       >
         {/* Logo */}
-        {/* <div className="flex items-center p-2">
-          <img
-            className={`w-8 h-8 md:w-10 md:h-10 ${isSidebarOpen ? "hidden" : ""}`}
-            src={bird}
-            alt="Logo"
-          />
-          <img
-            src={easyCol}
-            className={`w-32 ml-6 ${!isSidebarOpen ? "hidden" : ""}`}
-            alt="Full Logo"
-          />
-        </div> */}
+
 
         {/* Sidebar Menu */}
         <nav>

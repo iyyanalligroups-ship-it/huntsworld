@@ -1,4 +1,3 @@
-// src/modules/admin/context/UnreadCountContext.jsx
 import { createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useSocket } from "./SocketContext";
 import { AuthContext } from "@/modules/landing/context/AuthContext";
@@ -9,7 +8,7 @@ const UnreadCountContext = createContext(undefined);
 
 export const UnreadCountProvider = ({ children }) => {
   const { user, token } = useContext(AuthContext);
-  const { socket } = useSocket(); // Use reactive socket
+  const { socket } = useSocket();
   const { selectedUser } = useSelectedUser();
 
   const [totalUnread, setTotalUnread] = useState(0);
@@ -107,7 +106,6 @@ export const UnreadCountProvider = ({ children }) => {
 export const useUnreadCount = () => {
   const context = useContext(UnreadCountContext);
   if (!context) {
-    // Silently return a fallback if used outside Provider (e.g on generic homepages)
     return { totalUnread: 0, setTotalUnread: () => { } };
   }
   return context;

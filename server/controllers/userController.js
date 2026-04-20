@@ -614,11 +614,6 @@ exports.loginUser = async (req, res) => {
     // This extracts just the name "STUDENT"
 
 
-    // const token = jwt.sign(
-    //   { userId: user._id, role: userRole }, // Now it is just the string
-    //   process.env.JWT_SECRET,
-    //   { expiresIn: "7d" }
-    // );
     const token = generateAuthToken(user);
 
     // Step 8: Success Response
@@ -816,105 +811,6 @@ exports.verifyEmailOtp = async (req, res) => {
     res.status(500).json({ success: false, message: "Error verifying OTP", error: error.message });
   }
 };
-
-// exports.verifyNumberOtp = async (req, res) => {
-//   try {
-//     const { phone, otp, isAdminLogin = false } = req.body;
-//     
-
-//     // Step 1: Validate input
-//     if (!phone || !otp) {
-//       return res.status(400).json({
-//         success: false,
-//         error: true,
-//         message: "Phone number and OTP are required",
-//       });
-//     }
-
-//     // Step 2: Get user with populated role
-//     const user = await User.findOne({ phone }).populate("role", "_id role");
-//     if (!user) {
-//       return res.status(404).json({
-//         success: false,
-//         error: true,
-//         message: "User not found",
-//       });
-//     }
-
-//     // Step 3: Role Check
-//     const userRole = user.role?.role;
-//     
-//     if (isAdminLogin) {
-//       if (userRole !== "ADMIN" && userRole !== "SUB_ADMIN") {
-//         return res.status(403).json({
-//           success: false,
-//           error: true,
-//           message: "Unauthorized access to admin panel",
-//         });
-//       }
-//     } else {
-//       if (userRole === "ADMIN" || userRole === "SUB_ADMIN") {
-//         return res.status(403).json({
-//           success: false,
-//           error: true,
-//           message: "Admins and Sub-Admins must use the admin login page",
-//         });
-//       }
-//     }
-
-//     if (!user.otpExpires || user.otpExpires < new Date()) {
-//       return res.status(400).json({
-//         success: false,
-//         error: true,
-//         message: "OTP has expired. Please request a new one.",
-//       });
-//     }
-
-//     // Step 5: OTP Verification (plain text comparison)
-//     
-//     
-//     if (user.number_otp !== otp) {
-//       return res.status(401).json({
-//         success: false,
-//         error: true,
-//         message: "Invalid OTP",
-//       });
-//     }
-
-//     // Step 6: Clear OTP and set number_verified to true
-//     user.number_otp = null;
-//     user.otpExpires = null; // ✅ ADD
-//     user.number_verified = true;
-//     await user.save();
-
-
-//     // Step 7: JWT Token Generation
-//     const token = jwt.sign(
-//       {
-//         userId: user._id,
-//         role: user.role?.role || "USER", // ✅ STRING
-//       },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "7d" }
-//     );
-
-//     // Step 8: Return response
-//     return res.status(200).json({
-//       success: true,
-//       error: false,
-//       message: "OTP verified and login successful",
-//       data: token,
-//     });
-//   } catch (error) {
-//     console.error("Verify OTP Error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       error: true,
-//       message: "Error verifying OTP",
-//       details: error.message,
-//     });
-//   }
-// };
 
 exports.verifyNumberOtp = async (req, res) => {
   try {
@@ -1768,88 +1664,6 @@ exports.verifyPhoneUpdateOtp = async (req, res) => {
 };
 
 
-// exports.verifyPhoneUpdateOtp = async (req, res) => {
-//   try {
-//     const { phone_otp, user_id } = req.body;
-
-//     if (!phone_otp || !user_id) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "OTP and user ID are required",
-//       });
-//     }
-
-//     // Find user and populate role
-//     const user = await User.findById(user_id).populate("role");
-//     if (!user) {
-//       return res.status(404).json({ success: false, message: "User not found" });
-//     }
-//     if (!user.otpExpires || user.otpExpires < new Date()) {
-//       return res.status(400).json({
-//         success: false,
-//         error: true,
-//         message: "OTP has expired. Please request a new one.",
-//       });
-//     }
-
-//     // Verify OTP
-//     if (String(user.number_otp) !== String(phone_otp)) {
-//       return res.status(400).json({ success: false, message: "Invalid OTP" });
-//     }
-
-//     // Update User Status
-//     user.number_otp = null;
-//     user.otpExpires = null; // ✅ ADD
-//     user.number_verified = true;
-//     await user.save();
-
-//     // ---------------------------------------------------------
-//     // FIX: Extract the role name string (e.g., "USER", "MERCHANT")
-//     // The previous code passed the whole object, causing auth middleware to fail
-//     // ---------------------------------------------------------
-//     const userRole = user.role?.role || "USER";
-
-//     const token = jwt.sign(
-//       {
-//         userId: user._id,
-//         role: user.role?.role || "USER", // ✅ STRING
-//       },
-//       process.env.JWT_SECRET,
-//       { expiresIn: "7d" }
-//     );
-
-//     // Prepare User Response
-//     const userResponse = {
-//       _id: user._id,
-//       name: user.name,
-//       referral_code: user.referral_code,
-//       email: user.email,
-//       phone: user.phone,
-//       gender: user.gender,
-//       profile_pic: user.profile_pic || null,
-//       email_verified: user.email_verified,
-//       number_verified: user.number_verified,
-//       created_at: user.created_at,
-//       updated_at: user.updated_at,
-//       role: user.role, // It's okay to send object to frontend, just not in token
-//     };
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "Phone number verified successfully",
-//       user: userResponse,
-//       token: token,
-//     });
-
-//   } catch (error) {
-//     console.error("Phone OTP verification error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Error verifying phone OTP",
-//       error: error.message,
-//     });
-//   }
-// };
 // Updated updateUserRoleById
 exports.updateUserRoleById = async (req, res) => {
   try {
@@ -2517,8 +2331,6 @@ exports.toggleUserStatus = async (req, res) => {
   try {
     const { userId } = req.params;
 
-
-    // if (!req.user.role === 'ADMIN') return res.status(403).json({ message: 'Access denied' });
 
     const user = await User.findById(userId);
     if (!user) {

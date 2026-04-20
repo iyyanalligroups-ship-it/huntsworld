@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGetBrandsForLandingQuery } from '@/redux/api/BrandApi';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { ArrowRight, SearchX, RefreshCcw } from 'lucide-react'; // Added icons
+import { ArrowRight, ArrowLeft, SearchX, RefreshCcw } from 'lucide-react'; // Added ArrowLeft
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Autoplay, Navigation } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
 
 const BrandsDisplay = () => {
     const [page, setPage] = useState(1);
     const [allBrands, setAllBrands] = useState([]);
     const [totalPages, setTotalPages] = useState(1);
+    const swiperRef = useRef(null);
 
     const navigate = useNavigate();
     const limit = 10;
@@ -23,7 +28,7 @@ const BrandsDisplay = () => {
         if (page === 1) {
             setAllBrands(data.data);
         } else {
-            // ✅ Improved: Prevent duplicates using a Map if API returns overlapping data
+            // ✅ Prevent duplicates 
             setAllBrands((prev) => {
                 const combined = [...prev, ...data.data];
                 const unique = Array.from(new Map(combined.map(item => [item._id, item])).values());
@@ -62,20 +67,40 @@ const BrandsDisplay = () => {
 
     return (
         <div className="py-16">
-            <div className="p-6 ">
+            <div className="p-6">
 
-                {/* Header */}
-                <div className="relative mb-12 flex flex-col items-start px-4">
-                    <div className="flex items-center gap-4 mb-2">
-                        <div className="w-[2px] h-[24px] bg-red-600" />
-                        <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-gray-400">
-                            Our Network
-                        </span>
+                {/* Header & Nav Controls */}
+                <div className="relative mb-12 flex flex-col md:flex-row md:items-end justify-between px-4 gap-6">
+                    <div className="flex flex-col items-start">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="w-[2px] h-[24px] bg-red-600" />
+                            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-gray-400">
+                                Our Network
+                            </span>
+                        </div>
+                        <h2 className="text-2xl md:text-3xl font-black text-[#0c1f4d] tracking-tighter leading-tight">
+                            Associated <span className="text-red-600">Premium Brands</span>
+                        </h2>
+                        <div className="h-[4px] w-[80px] bg-[#0c1f4d] mt-4 rounded-full" />
                     </div>
-                    <h2 className="text-2xl md:text-3xl font-black text-[#0c1f4d] tracking-tighter leading-tight">
-                        Associated <span className="text-red-600">Premium Brands</span>
-                    </h2>
-                    <div className="h-[4px] w-[80px] bg-[#0c1f4d] mt-4 rounded-full" />
+
+                    {/* Navigation Buttons */}
+                    {allBrands.length > 10 && (
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => swiperRef.current?.swiper.slidePrev()}
+                                className="w-10 h-10 cursor-pointer flex items-center justify-center rounded-full border border-[#0c1f4d] text-[#0c1f4d] hover:bg-[#0c1f4d] hover:text-white transition-all shadow-sm"
+                            >
+                                <ArrowLeft size={18} />
+                            </button>
+                            <button
+                                onClick={() => swiperRef.current?.swiper.slideNext()}
+                                className="w-10 h-10 cursor-pointer flex items-center justify-center rounded-full border border-[#0c1f4d] text-[#0c1f4d] hover:bg-[#0c1f4d] hover:text-white transition-all shadow-sm"
+                            >
+                                <ArrowRight size={18} />
+                            </button>
+                        </div>
+                    )}
                 </div>
 
                 {/* Brands Grid & Empty State Logic */}
@@ -84,7 +109,7 @@ const BrandsDisplay = () => {
                     <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center justify-center  bg-gray-50/50 rounded-[32px] border-2 border-dashed border-gray-100"
+                        className="flex flex-col items-center justify-center bg-gray-50/50 p-10 rounded-[32px] border-2 border-dashed border-gray-100"
                     >
                         <div className="relative mb-6">
                             <div className="absolute inset-0 bg-blue-100 rounded-full blur-2xl opacity-50 animate-pulse" />
@@ -94,54 +119,61 @@ const BrandsDisplay = () => {
                         <p className="text-gray-500 text-center max-w-xs mb-8">
                             We couldn't find any associated brands right now. Check back later for our latest updates.
                         </p>
-
                     </motion.div>
                 ) : (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6">
-                        <AnimatePresence mode='popLayout'>
-                            {allBrands.map((brand, idx) => (
-                                <motion.div
-                                    key={brand._id}
-                                    layout
-                                    initial={{ opacity: 0, scale: 0.9 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    onClick={() => {
-                                        if (brand.link) {
-                                            window.open(brand.link, "_blank", "noopener,noreferrer");
-                                        }
-                                    }}
-                                    transition={{ duration: 0.3, delay: (idx % 10) * 0.05 }}
-
-                                    className="group cursor-pointer relative bg-white border border-gray-100 rounded-2xl p-6 h-32 flex justify-center items-center
-                                               shadow-[0_2px_10px_rgba(0,0,0,0.02)]
-                                               hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)]
-                                               hover:-translate-y-2 transition-all duration-500 overflow-hidden"
-                                >
-                                    <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-transparent
-                                                   opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
-                                    <img
-                                        src={brand.image_url}
-                                        alt={brand.brand_name}
-                                        className="max-h-full max-w-full object-contain filter grayscale
-                                                   group-hover:grayscale-0 scale-90 group-hover:scale-110
-                                                   transition-all duration-500 relative z-10"
-                                    />
-                                </motion.div>
+                    <div className="w-full px-4 relative">
+                        <Swiper
+                            ref={swiperRef}
+                            modules={[Autoplay, Navigation]}
+                            spaceBetween={20}
+                            slidesPerView="auto"
+                            loop={allBrands.length > 10}
+                            speed={allBrands.length > 10 ? 2000 : 500} 
+                            autoplay={allBrands.length > 10 ? {
+                                delay: 0, 
+                                disableOnInteraction: false,
+                                pauseOnMouseEnter: true,
+                            } : false}
+                            breakpoints={{
+                                320: { slidesPerView: 3, spaceBetween: 20 },
+                                640: { slidesPerView: 5, spaceBetween: 30 },
+                                1024: { slidesPerView: 8, spaceBetween: 40 },
+                            }}
+                            className="brands-swiper flex items-center"
+                        >
+                            {allBrands.map((brand) => (
+                                <SwiperSlide key={brand._id} className="!w-auto flex justify-center items-center">
+                                    <div
+                                        onClick={() => {
+                                            if (brand.link) {
+                                                window.open(brand.link, "_blank", "noopener,noreferrer");
+                                            }
+                                        }}
+                                        className="group cursor-pointer relative h-16 md:h-20 min-w-[80px] md:min-w-[120px] flex justify-center items-center hover:-translate-y-1 transition-all duration-400"
+                                    >
+                                        <img
+                                            src={brand.image_url}
+                                            alt={brand.brand_name}
+                                            className="max-h-full max-w-full object-contain filter grayscale opacity-70
+                                                       group-hover:grayscale-0 group-hover:opacity-100 scale-95 group-hover:scale-105
+                                                       transition-all duration-400 relative z-10"
+                                        />
+                                    </div>
+                                </SwiperSlide>
                             ))}
-                        </AnimatePresence>
-
-                        {/* Skeleton Loader during fetch */}
-                        {(isLoading || isFetching) &&
-                            Array.from({ length: 5 }).map((_, idx) => (
-                                <div
-                                    key={`skeleton-${idx}`}
-                                    className="h-32 w-full bg-white border border-gray-100 rounded-2xl p-6
-                                               flex justify-center items-center shadow-sm"
-                                >
-                                    <Skeleton className="h-12 w-3/4 rounded-lg bg-gray-100" />
-                                </div>
-                            ))}
+                            
+                            {/* Skeleton Loader during fetch inside Swiper */}
+                            {(isLoading || isFetching) &&
+                                Array.from({ length: 5 }).map((_, idx) => (
+                                    <SwiperSlide key={`skeleton-${idx}`} className="!w-auto flex justify-center items-center">
+                                        <div className="h-16 md:h-20 min-w-[80px] md:min-w-[120px] flex justify-center items-center">
+                                            <Skeleton className="h-8 w-full rounded-md bg-gray-200" />
+                                        </div>
+                                    </SwiperSlide>
+                                ))}
+                        </Swiper>
+                        
+                        {/* Note: The global Swiper CSS for linear smooth scrolling requires tweaking but speed=2000 with delay=0 is close enough. Overriding easing is done in global css typically */}
                     </div>
                 )}
 

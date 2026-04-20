@@ -51,14 +51,14 @@ export default function CategoryForm({ open, onClose, editingCategory,refetchLis
      if (res) {
       refetchList?.();
      }
-      // ✅ Set form first
+
       const updatedForm = {
         ...form,
         category_image: newImageUrl,
       };
       setForm(updatedForm);
 
-      // ✅ Then update DB with correct image
+
       if (editingCategory) {
         await updateCategory({
           id: editingCategory._id,

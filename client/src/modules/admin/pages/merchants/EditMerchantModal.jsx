@@ -25,7 +25,7 @@ const EditMerchantForm = ({ merchant, onSave, onClose }) => {
   const [imagePreviews, setImagePreviews] = useState(merchant?.company_images || []);
   const [uploadError, setUploadError] = useState(null);
 
-  // Initialize axios instance for image server (adjust URL as needed)
+
   const imageApi = axios.create({
     baseURL: import.meta.env.VITE_IMAGE_SERVER_URL || "https://image-server.com/api",
     headers: {
@@ -33,17 +33,17 @@ const EditMerchantForm = ({ merchant, onSave, onClose }) => {
     },
   });
 
-  // Handle text input changes
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Handle logo file selection
+
   const handleLogoChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Validate file type and size
+
       if (!["image/png", "image/jpeg", "image/jpg"].includes(file.type)) {
         setUploadError("Logo must be a PNG or JPEG image.");
         return;

@@ -119,21 +119,7 @@ console.log(seller ,'seller infor fotessdf');
         </div>
 
         {/* --- Gallery (Only render if exists) --- */}
-        {/* {seller.company_images?.length > 0 && (
-          <div className="mt-4 flex gap-2 pt-4 border-t border-gray-50">
-            {seller.company_images.slice(0, 3).map((img, i) => (
-              <div key={i} className="w-10 h-10 rounded-lg overflow-hidden border border-gray-100 relative bg-gray-50 hover:opacity-80 transition-opacity">
-                <img
-                  src={img || DEFAULT_LOGO}
-                  alt="Gallery"
-                  loading="lazy"
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.currentTarget.src = DEFAULT_LOGO; }}
-                />
-              </div>
-            ))}
-          </div>
-        )} */}
+
 
         {/* --- Footer Action --- */}
         <div className="mt-5 pt-2">

@@ -70,7 +70,6 @@ const StepperProductForm = forwardRef(({ editingProduct, onClose }, ref) => {
     isInitialLoad || !categoryData.super_sub_category_id ? skipToken : categoryData.super_sub_category_id
   );
 
-  // Reset categoryData when modal closes
   useEffect(() => {
     if (!editingProduct) {
       console.log("Resetting categoryData on modal close");
@@ -84,7 +83,7 @@ const StepperProductForm = forwardRef(({ editingProduct, onClose }, ref) => {
     }
   }, [editingProduct]);
 
-  // Set form data and trigger category queries
+
   useEffect(() => {
     console.log("editingProduct:", editingProduct);
     if (editingProduct) {
@@ -117,11 +116,10 @@ const StepperProductForm = forwardRef(({ editingProduct, onClose }, ref) => {
       setFormData(newFormData);
       setCategoryData(newCategoryData);
       setAttributes(newAttributes);
-      setIsInitialLoad(false); // Allow category queries to run
+      setIsInitialLoad(false); 
     }
   }, [editingProduct, selectedMerchant]);
 
-  // Log categoryData changes
   useEffect(() => {
     console.log("Current categoryData:", categoryData);
   }, [categoryData]);
