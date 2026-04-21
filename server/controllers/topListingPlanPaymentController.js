@@ -41,7 +41,8 @@ exports.createTopListingOrder = async (req, res) => {
 
     // 2️⃣ Get dynamic pricing
     const { pricePerMonth } = await getTopListingMonthlyRate();
-    const gstPercentage = await getGSTPercentage();
+    const dbGstPercentage = await getGSTPercentage();
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : dbGstPercentage;
 
     const baseAmount = days * pricePerMonth;
     const gstAmount = (baseAmount * gstPercentage) / 100;
@@ -98,29 +99,10 @@ exports.createTopListingOrder = async (req, res) => {
       notes: `Top Listing - ${days} month(s)`,
     });
 
-    // 6️⃣ Top Listing Payment
-    const topListingPayment = await TopListingPayment.create({
-      user_id,
-      subscription_id,
-      days,
-      amount: baseAmount,
-      gst_percentage: gstPercentage,
-      gst_amount: gstAmount,
-      razorpay_order_id: razorpayOrder.id,
-      payment_status: STATUS.CREATED,
-      status: STATUS.ACTIVE_CAP,
-      payment_history_id: paymentHistory._id,
-    });
-
-    // 7️⃣ Link payment
-    await PaymentHistory.findByIdAndUpdate(paymentHistory._id, {
-      top_listing_payment_id: topListingPayment._id
-    });
-
-    // 8️⃣ Response
+    // 6️⃣ Success Response
     res.status(201).json({
       success: true,
-      message: "Top listing order created",
+      message: "Top listing order initialized. Please proceed to payment.",
       pricing: {
         days,
         pricePerMonth,
@@ -130,6 +112,7 @@ exports.createTopListingOrder = async (req, res) => {
         totalAmount: totalAmount.toFixed(2),
       },
       order: razorpayOrder,
+      paymentHistoryId: paymentHistory._id,
     });
   } catch (error) {
     console.error("Top Listing Order Error:", error);
@@ -165,46 +148,63 @@ exports.verifyTopListingPayment = async (req, res) => {
       });
     }
 
-    // Find and update only if still 'created'
-    const topListing = await TopListingPayment.findOneAndUpdate(
-      {
-        razorpay_order_id,
-        payment_status: STATUS.CREATED,
-      },
-      {
-        razorpay_payment_id,
-        razorpay_signature,
-        payment_status: STATUS.PAID,
-        starts_at: new Date(),
-        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000 * (await TopListingPayment.findOne({ razorpay_order_id }).select('days')).days),
-        updated_at: new Date(),
-      },
-      { new: true }
-    );
+    // 3. Find and verify Payment History
+    const paymentHistory = await PaymentHistory.findOne({
+      razorpay_order_id,
+      payment_type: PAYMENT_TYPES.TOP_LISTING,
+    });
 
-    if (!topListing) {
+    if (!paymentHistory) {
       return res.status(404).json({
         success: false,
-        message: 'Top listing payment not found or already processed',
+        message: 'Payment record not found or already processed',
       });
     }
 
-    // Update PaymentHistory
-    const paymentHistory = await PaymentHistory.findOneAndUpdate(
-      {
-        razorpay_order_id,
-        payment_type: PAYMENT_TYPES.TOP_LISTING,
-      },
-      {
-        razorpay_payment_id,
-        razorpay_signature,
-        status: STATUS.PAID,
-        captured: true,
-        paid_at: new Date(),
-        payment_method: 'razorpay',
-      },
-      { new: true }
-    );
+    if (paymentHistory.status === STATUS.PAID) {
+        return res.status(400).json({
+          success: false,
+          message: 'This payment has already been verified and processed',
+        });
+    }
+
+    // 4. Extract days from notes
+    // Format: `Top Listing - ${days} month(s)`
+    let days = 0;
+    if (paymentHistory.notes) {
+        const daysMatch = paymentHistory.notes.match(/Top Listing - (\d+)/);
+        days = daysMatch ? parseInt(daysMatch[1]) : 0;
+    }
+
+    // 5. Create Top Listing Payment record (Only NOW after payment)
+    const topListing = new TopListingPayment({
+      user_id: paymentHistory.user_id,
+      subscription_id: paymentHistory.user_subscription_id,
+      days,
+      amount: paymentHistory.amount / 100,
+      gst_percentage: paymentHistory.gst_percentage,
+      gst_amount: paymentHistory.gst_amount / 100,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      payment_status: STATUS.PAID,
+      status: STATUS.ACTIVE_CAP, // Activate the record
+      starts_at: new Date(),
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000 * days),
+      payment_history_id: paymentHistory._id,
+    });
+
+    await topListing.save();
+
+    // 6. Update PaymentHistory
+    paymentHistory.razorpay_payment_id = razorpay_payment_id;
+    paymentHistory.razorpay_signature = razorpay_signature;
+    paymentHistory.status = STATUS.PAID;
+    paymentHistory.captured = true;
+    paymentHistory.paid_at = new Date();
+    paymentHistory.payment_method = 'razorpay';
+    paymentHistory.top_listing_payment_id = topListing._id;
+    await paymentHistory.save();
 
     // Invoice email (adapted from your trending points version)
     const user = await User.findById(topListing.user_id).select('name email');
@@ -443,7 +443,8 @@ exports.upgradeTopListing = async (req, res) => {
 
     // 2️⃣ Fetch pricing configs
     const { pricePerMonth } = await getTopListingMonthlyRate(); // per-day price in your case
-    const gstPercentage = await getGSTPercentage();
+    const dbGstPercentage = await getGSTPercentage();
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : dbGstPercentage;
 
     // 3️⃣ NEW PAYMENT (only added days)
     const newBaseAmount = days * pricePerMonth;

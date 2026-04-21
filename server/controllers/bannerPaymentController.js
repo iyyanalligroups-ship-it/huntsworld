@@ -113,7 +113,14 @@ exports.createBannerOrder = async (req, res) => {
       durationType: "percentage",
     });
 
-    const gstPercentage = gstPlan?.price ?? 0;
+    if (!gstPlan && req.body.gst_percentage === undefined) {
+      return res.status(500).json({
+        success: false,
+        message: "GST configuration not found",
+      });
+    }
+
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan?.price ?? 0);
 
     const baseAmount = expectedAmount;
     const gstAmount = (baseAmount * gstPercentage) / 100;
@@ -165,36 +172,13 @@ exports.createBannerOrder = async (req, res) => {
     await paymentHistory.save();
 
     /* ------------------------------------------------
-       9️⃣ Create BannerPayment Record
-    ------------------------------------------------ */
-    const bannerPayment = new BannerPayment({
-      user_id,
-      subscription_id,
-      days,
-      amount: baseAmount,
-      total_amount_paid: baseAmount, // ✅ Initialize total_amount_paid
-      gst_percentage: gstPercentage,
-      gst_amount: gstAmount,
-      razorpay_order_id: razorpayOrder.id,
-      payment_status: STATUS.CREATED,
-      status: STATUS.ACTIVE_CAP,
-      end_date,
-      payment_history_id: paymentHistory._id,
-    });
-
-    await bannerPayment.save();
-
-    paymentHistory.banner_id = bannerPayment._id;
-    await paymentHistory.save();
-
-    /* ------------------------------------------------
-       🔟 Success Response
+       9️⃣ Success Response
     ------------------------------------------------ */
     return res.status(201).json({
       success: true,
-      message: "Banner advertisement order created successfully",
+      message: "Banner advertisement order initialized. Please proceed to payment.",
       order: razorpayOrder,
-      bannerPayment,
+      paymentHistoryId: paymentHistory._id,
       gst: {
         percentage: gstPercentage,
         amount: gstAmount.toFixed(2),
@@ -243,56 +227,69 @@ exports.verifyBannerPayment = async (req, res) => {
     }
 
     /* ------------------------------------------------
-       3️⃣ Find Banner Payment
-    ------------------------------------------------ */
-    const bannerPayment = await BannerPayment.findOne({
-      razorpay_order_id,
-      payment_status: STATUS.CREATED,
-    });
-
-    if (!bannerPayment) {
-      return res.status(404).json({
-        success: false,
-        message: "Payment record not found or already verified",
-      });
-    }
-
-    /* ------------------------------------------------
-       4️⃣ Update Payment Status
-    ------------------------------------------------ */
-    bannerPayment.razorpay_payment_id = razorpay_payment_id;
-    bannerPayment.razorpay_signature = razorpay_signature;
-    bannerPayment.payment_status = STATUS.PAID;
-    bannerPayment.updated_at = new Date();
-    await bannerPayment.save();
-    
-    /* ------------------------------------------------
-       4.5️⃣ Handle Upgrade Lifecycle (Deactivate Old Record)
-    ------------------------------------------------ */
-    if (bannerPayment.purchase_type === "upgrade" && bannerPayment.previous_banner_payment_id) {
-      await BannerPayment.findByIdAndUpdate(bannerPayment.previous_banner_payment_id, {
-        status: STATUS.EXPIRED_CAP, // or STATUS.CANCELLED_CAP? Usually EXPIRED_CAP works
-        updated_at: new Date()
-      });
-    }
-
-    /* ------------------------------------------------
-       5️⃣ Update Payment History
+       3️⃣ Find Payment History
     ------------------------------------------------ */
     const paymentHistory = await PaymentHistory.findOne({
       razorpay_order_id,
       payment_type: PAYMENT_TYPES.BANNER,
     });
-
-    if (paymentHistory) {
-      paymentHistory.razorpay_payment_id = razorpay_payment_id;
-      paymentHistory.razorpay_signature = razorpay_signature;
-      paymentHistory.status = STATUS.PAID;
-      paymentHistory.captured = true;
-      paymentHistory.paid_at = new Date();
-      paymentHistory.payment_method = "razorpay";
-      await paymentHistory.save();
+    
+    if (!paymentHistory) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment record not found for this order",
+      });
     }
+
+    if (paymentHistory.status === STATUS.PAID) {
+      return res.status(400).json({
+        success: false,
+        message: "This payment has already been verified and processed",
+      });
+    }
+
+    /* ------------------------------------------------
+       4️⃣ Create Banner Payment Record (Only after verified payment)
+    ------------------------------------------------ */
+    // Extract days from paymentHistory.notes (e.g., "Banner advertisement for 30 days")
+    const notesStr = paymentHistory.notes || "";
+    const daysMatch = notesStr.match(/for (\d+) days/);
+    const days = daysMatch ? parseInt(daysMatch[1]) : 30; // fallback if regex fails
+
+    const createdAt = new Date();
+    const end_date = new Date(createdAt);
+    end_date.setDate(createdAt.getDate() + days);
+
+    const bannerPayment = new BannerPayment({
+      user_id: paymentHistory.user_id,
+      subscription_id: paymentHistory.user_subscription_id,
+      days,
+      amount: paymentHistory.amount / 100,
+      total_amount_paid: paymentHistory.amount / 100,
+      gst_percentage: paymentHistory.gst_percentage,
+      gst_amount: paymentHistory.gst_amount / 100,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      payment_status: STATUS.PAID,
+      status: STATUS.ACTIVE_CAP,
+      end_date,
+      payment_history_id: paymentHistory._id,
+    });
+    
+    await bannerPayment.save();
+
+    /* ------------------------------------------------
+       5️⃣ Update Payment History Status
+    ------------------------------------------------ */
+    paymentHistory.razorpay_payment_id = razorpay_payment_id;
+    paymentHistory.razorpay_signature = razorpay_signature;
+    paymentHistory.status = STATUS.PAID;
+    paymentHistory.captured = true;
+    paymentHistory.paid_at = new Date();
+    paymentHistory.payment_method = "razorpay";
+    paymentHistory.banner_id = bannerPayment._id;
+    await paymentHistory.save();
 
     /* ------------------------------------------------
        6️⃣ Prepare Invoice Data (NO DISCOUNT LOGIC)

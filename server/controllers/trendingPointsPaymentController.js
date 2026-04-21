@@ -78,14 +78,14 @@ exports.createTrendingPointsOrder = async (req, res) => {
       durationType: 'percentage',
     });
 
-    if (!gstPlan) {
+    if (!gstPlan && req.body.gst_percentage === undefined) {
       return res.status(500).json({
         success: false,
         message: 'GST configuration not found in system',
       });
     }
 
-    const gstPercentage = gstPlan.price !== undefined ? gstPlan.price : 18; // fallback
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18); // fallback
     const baseAmount = Number(amount);
     const gstAmount = (baseAmount * gstPercentage) / 100;
     const totalAmount = baseAmount + gstAmount;
@@ -127,33 +127,12 @@ exports.createTrendingPointsOrder = async (req, res) => {
 
     await paymentHistory.save();
 
-    // 7. Create TrendingPointsPayment record
-    const trendingPointsPayment = new TrendingPointsPayment({
-      user_id,
-      subscription_id: subscription_id || null,
-      points,
-      amount: baseAmount,
-      gst_percentage: gstPercentage,
-      gst_amount: gstAmount,
-      razorpay_order_id: razorpayOrder.id,
-      payment_status: STATUS.CREATED,
-      status: STATUS.PENDING_CAP,
-      payment_history_id: paymentHistory._id, // recommended link
-    });
-
-    await trendingPointsPayment.save();
-
-    // 8. Two-way reference (optional but very useful)
-    paymentHistory.trending_point_payment_id = trendingPointsPayment._id;
-    await paymentHistory.save();
-
-    // 9. Success response
+    // 7. Success response
     res.status(201).json({
       success: true,
-      message: 'Trending points order created successfully',
+      message: 'Trending points order initialized. Please proceed to payment.',
       order: razorpayOrder,
-      trendingPointsPayment,
-      paymentHistoryId: paymentHistory._id, // useful for verification flow
+      paymentHistoryId: paymentHistory._id,
       gst: {
         percentage: gstPercentage,
         amount: gstAmount.toFixed(2),
@@ -200,116 +179,66 @@ exports.verifyTrendingPointsPayment = async (req, res) => {
       });
     }
 
-    // 3. Find and update TrendingPointsPayment (only if still 'created')
-    const query = { payment_status: STATUS.CREATED };
-    if (razorpay_order_id) {
-      query.razorpay_order_id = razorpay_order_id;
-    } else if (req.body.razorpay_subscription_id) {
-      query.razorpay_subscription_id = req.body.razorpay_subscription_id;
-    } else {
-      return res.status(400).json({ success: false, message: "No identifying ID provided" });
-    }
-
-    const trendingPayment = await TrendingPointsPayment.findOneAndUpdate(
-      query,
-      {
-        razorpay_payment_id,
-        razorpay_signature,
-        payment_status: STATUS.PAID,
-        status: STATUS.ACTIVE_CAP, // Activate the record now that it's paid
-        updated_at: new Date(),
-      },
-      { new: true }
-    );
-
-    if (!trendingPayment) {
-      return res.status(404).json({
-        success: false,
-        message: 'Trending points payment record not found or already processed',
-      });
-    }
-
-    // 4. Update or create PaymentHistory record
-    const historyQuery = { payment_type: PAYMENT_TYPES.TRENDING_POINT };
+    // 3. Find and verify Payment History
+    const historyQuery = { 
+        payment_type: PAYMENT_TYPES.TRENDING_POINT,
+        status: { $ne: STATUS.PAID } // only process unpaid ones
+    };
     if (razorpay_order_id) {
       historyQuery.razorpay_order_id = razorpay_order_id;
     } else if (req.body.razorpay_subscription_id) {
       historyQuery.razorpay_subscription_id = req.body.razorpay_subscription_id;
     }
 
-    let paymentHistory = await PaymentHistory.findOne(historyQuery);
+    const paymentHistory = await PaymentHistory.findOne(historyQuery);
 
-    if (paymentHistory) {
-      // Update existing record (most common case)
-      paymentHistory.razorpay_payment_id = razorpay_payment_id;
-      paymentHistory.razorpay_signature = razorpay_signature;
-      paymentHistory.status = STATUS.PAID;
-      paymentHistory.captured = true;
-      paymentHistory.paid_at = new Date();
-      paymentHistory.payment_method = 'razorpay';
-      await paymentHistory.save();
-    } else {
-      // Fallback: create if missing. During upgrades, trendingPayment.amount is the accumulated total,
-      // not the transaction amount. To prevent massive incorrect receipts, we fetch the exact transaction amount from Razorpay.
-      let orderAmountPaise = 0;
-      let orderBasePaise = 0;
-      let orderGstPaise = 0;
-      try {
-        if (razorpay_order_id) {
-          const order = await razorpay.orders.fetch(razorpay_order_id);
-          orderAmountPaise = order.amount; // already in paise
-          const gstRecord = await CommonSubscriptionPlan.findOne({ name: 'GST', category: 'gst' });
-          const currentGst = gstRecord?.price !== undefined ? gstRecord.price : 18;
-          orderBasePaise = Math.round(orderAmountPaise / (1 + currentGst / 100));
-          orderGstPaise = orderAmountPaise - orderBasePaise;
-        }
-      } catch (err) {
-        console.error('Verify fallback: failed to fetch Razorpay order exactly, using rough totals:', err.message);
-      }
-
-      // If fetch fails, we unfortunately must fall back to the trendingPayment totals (which may be accumulated)
-      if (!orderAmountPaise) {
-        orderAmountPaise = Math.round(((trendingPayment.amount || 0) + (trendingPayment.gst_amount || 0)) * 100);
-        orderBasePaise = Math.round((trendingPayment.amount || 0) * 100);
-        orderGstPaise = Math.round((trendingPayment.gst_amount || 0) * 100);
-      }
-
-      paymentHistory = new PaymentHistory({
-        user_id: trendingPayment.user_id,
-        payment_type: PAYMENT_TYPES.TRENDING_POINT,
-        trending_point_payment_id: trendingPayment._id,
-        user_subscription_id: trendingPayment.subscription_id || null,
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        amount: orderBasePaise,
-        gst_percentage: trendingPayment.gst_percentage !== undefined ? trendingPayment.gst_percentage : 18,
-        gst_amount: orderGstPaise,
-        total_amount: orderAmountPaise,
-        currency: 'INR',
-        status: STATUS.PAID,
-        captured: true,
-        paid_at: new Date(),
-        receipt: `trending_${trendingPayment.user_id}_${Date.now()}`,
-        notes: `Trending Points Purchase - ${trendingPayment.points} points`,
-      });
-      await paymentHistory.save();
-
-      // Optional: link back
-      trendingPayment.payment_history_id = paymentHistory._id;
-      await trendingPayment.save();
-    }
-
-    // 5. Handle upgrades: Cancel the old payment record now that the new one is verified and active
-    if (trendingPayment.upgraded_from_id) {
-      await TrendingPointsPayment.findByIdAndUpdate(trendingPayment.upgraded_from_id, {
-        status: STATUS.CANCELLED_CAP,
-        updated_at: new Date()
+    if (!paymentHistory) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment record not found or already processed',
       });
     }
 
+    // 4. Extract points from notes
+    // Format: `Purchase of ${points} trending points ...`
+    let points = 0;
+    if (paymentHistory.notes) {
+        const pointsMatch = paymentHistory.notes.match(/Purchase of (\d+) trending points/);
+        points = pointsMatch ? parseInt(pointsMatch[1]) : 0;
+    }
 
-    // 5. Fetch data for invoice
+    // 5. Create TrendingPointsPayment record (Only NOW after payment)
+    const trendingPayment = new TrendingPointsPayment({
+      user_id: paymentHistory.user_id,
+      subscription_id: paymentHistory.user_subscription_id || null,
+      points,
+      amount: paymentHistory.amount / 100,
+      gst_percentage: paymentHistory.gst_percentage,
+      gst_amount: paymentHistory.gst_amount / 100,
+      razorpay_order_id: razorpay_order_id || null,
+      razorpay_subscription_id: req.body.razorpay_subscription_id || null,
+      razorpay_payment_id,
+      razorpay_signature,
+      payment_status: STATUS.PAID,
+      status: STATUS.ACTIVE_CAP, // Activate the record
+      payment_history_id: paymentHistory._id,
+    });
+
+    await trendingPayment.save();
+
+    // 6. Update PaymentHistory record
+    paymentHistory.razorpay_payment_id = razorpay_payment_id;
+    paymentHistory.razorpay_signature = razorpay_signature;
+    paymentHistory.status = STATUS.PAID;
+    paymentHistory.captured = true;
+    paymentHistory.paid_at = new Date();
+    paymentHistory.payment_method = 'razorpay';
+    paymentHistory.trending_point_payment_id = trendingPayment._id;
+    await paymentHistory.save();
+
+    /* ------------------------------------------------
+       7️⃣ Prepare Invoice Data
+    ------------------------------------------------ */
     const user = await User.findById(trendingPayment.user_id).select('name email');
     const subscription = await UserSubscription.findById(trendingPayment.subscription_id);
     const plan = subscription
@@ -475,11 +404,11 @@ exports.upgradeTrendingPoints = async (req, res) => {
       category: 'gst',
       durationType: 'percentage',
     });
-    if (!gstPlan) {
+    if (!gstPlan && req.body.gst_percentage === undefined) {
       return res.status(404).json({ message: 'GST plan not found' });
     }
 
-    const gstPercentage = gstPlan.price !== undefined ? gstPlan.price : 18; // fallback
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18); // fallback
     const baseAmount = amount; // Base amount (points * pointRate)
     const gstAmount = (baseAmount * gstPercentage) / 100;
     const totalAmount = baseAmount + gstAmount;

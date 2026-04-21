@@ -1518,11 +1518,11 @@ exports.createTrustSealRequest = async (req, res) => {
       durationType: "percentage",
     });
 
-    if (!gstPlan) {
+    if (!gstPlan && req.body.gst_percentage === undefined) {
       return res.status(500).json({ message: "GST configuration not found" });
     }
 
-    const gstPercentage = gstPlan.price !== undefined ? gstPlan.price : 18;
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18);
     const baseAmount = Number(amount);
     const gstAmount = (baseAmount * gstPercentage) / 100;
     const totalAmount = baseAmount + gstAmount;
@@ -1552,10 +1552,10 @@ exports.createTrustSealRequest = async (req, res) => {
       razorpay_order_id: razorpayOrder.id,
       receipt,
 
-      amount: baseAmount,
+      amount: Math.round(baseAmount * 100),
       gst_percentage: gstPercentage,
-      gst_amount: gstAmount,
-      total_amount: totalAmount,
+      gst_amount: Math.round(gstAmount * 100),
+      total_amount: Math.round(totalAmount * 100),
       currency: "INR",
 
       status: STATUS.CREATED, // will be updated to paid/failed later
@@ -1564,76 +1564,12 @@ exports.createTrustSealRequest = async (req, res) => {
 
     await paymentHistory.save();
 
-    // 9. Create Trust Seal Request
-    const trustSealRequest = new TrustSealRequest({
-      user_id,
-      subscription_id,
-      amount: baseAmount,
-      gst_percentage: gstPercentage,
-      gst_amount: gstAmount,
-      total_amount: totalAmount,
-      razorpay_order_id: razorpayOrder.id,
-      status: STATUS.PENDING,
-      isRead: false,
-      payment_history_id: paymentHistory._id, // ← optional but very useful
-    });
-
-    await trustSealRequest.save();
-
-    // 10. Update payment history with trust seal reference (two-way relation)
-    paymentHistory.trust_seal_id = trustSealRequest._id;
-    await paymentHistory.save();
-
-    // 11. Notify admin (socket + SMS)
-    // Fetch user info for notifications
-    const user = await User.findById(user_id).select("name phone");
-    const userName = user?.name || "Merchant";
-
-    // 🔥 Emit real-time socket notification to all connected admins
-    try {
-      const io = global.io;
-      if (io) {
-        io.of("/trust-seal-notifications")
-          .to("trust-seal:admin")
-          .emit("newTrustSealRequest", {
-            _id: trustSealRequest._id,
-            user_id,
-            merchantName: userName,
-            amount: baseAmount,
-            totalAmount,
-            status: STATUS.PENDING,
-            isRead: false,
-            created_at: trustSealRequest.created_at || new Date(),
-          });
-      }
-    } catch (socketErr) {
-      console.error("⚠️ [TrustSeal] Socket emit failed:", socketErr.message);
-    }
-
-    // === SMS TO USER: REQUEST RECEIVED ===
-    try {
-      if (user?.phone) {
-        const currentDate = new Date().toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-
-        const smsText = `Dear ${userName}, your Trust Seal request for Rs. ${totalAmount.toFixed(2)} submitted on ${currentDate} has been received and is under review. – HUNTSWORLD`;
-
-        const smsApiUrl = `https://online.chennaisms.com/api/mt/SendSMS?user=huntsworld&password=india123&senderid=HWHUNT&channel=Trans&DCS=0&flashsms=0&number=${user.phone}&text=${encodeURIComponent(smsText)}`;
-        await axios.get(smsApiUrl);
-      }
-    } catch (err) {
-      console.error(`SMS failed for user`, err.message);
-    }
-    // 12. Final success response
+    // 9. Final success response
     res.status(201).json({
       success: true,
-      message: "Trust Seal request created. Proceed to payment.",
+      message: "Razorpay order created. Please proceed to payment.",
       order: razorpayOrder,
-      trustSealRequest,
-      paymentHistoryId: paymentHistory._id, // useful for frontend tracking
+      paymentHistoryId: paymentHistory._id,
       gst: {
         percentage: gstPercentage,
         amount: gstAmount,
@@ -1679,73 +1615,65 @@ exports.verifyTrustSealPayment = async (req, res) => {
       });
     }
 
-    // 2. Find the trust seal request
-    const trustSealRequest = await TrustSealRequest.findOne({
-      razorpay_order_id,
-      status: STATUS.PENDING, // only process pending ones
-    });
-    if (!trustSealRequest) {
-      return res.status(404).json({
-        success: false,
-        message: "Trust seal request not found or already processed",
-      });
-    }
-
-    // 3. Update TrustSealRequest
-    trustSealRequest.razorpay_payment_id = razorpay_payment_id;
-    trustSealRequest.razorpay_signature = razorpay_signature;
-    // trustSealRequest.status = "payment_verified";
-    trustSealRequest.updated_at = new Date();
-
-    await trustSealRequest.save();
-
-    // 4. Update / Create PaymentHistory
-    let paymentHistory = await PaymentHistory.findOne({
+    // 2. Find the Payment History (which acts as the preliminary record)
+    const paymentHistory = await PaymentHistory.findOne({
       razorpay_order_id,
       payment_type: "trust_seal",
     });
 
-    if (paymentHistory) {
-      // Update existing record
-      paymentHistory.razorpay_payment_id = razorpay_payment_id;
-      paymentHistory.razorpay_signature = razorpay_signature;
-      paymentHistory.status = "paid";
-      paymentHistory.captured = true;
-      paymentHistory.paid_at = new Date();
-      paymentHistory.payment_method = "razorpay"; // you can get from webhook later if needed
-      await paymentHistory.save();
-    } else {
-      // Rare case - create if missing
-      paymentHistory = new PaymentHistory({
-        user_id: trustSealRequest.user_id,
-        payment_type: "trust_seal",
-        trust_seal_id: trustSealRequest._id,
-        user_subscription_id: trustSealRequest.subscription_id,
-        razorpay_order_id,
-        razorpay_payment_id,
-        razorpay_signature,
-        amount: trustSealRequest.amount,
-        gst_percentage: trustSealRequest.gst_percentage,
-        gst_amount: trustSealRequest.gst_amount,
-        total_amount: trustSealRequest.total_amount,
-        currency: "INR",
-        status: STATUS.PAID,
-        captured: true,
-        paid_at: new Date(),
-        receipt: `trustseal_${trustSealRequest.user_id}_${Date.now()}`,
-        notes: "Trust Seal Payment Verified",
+    if (!paymentHistory) {
+      return res.status(404).json({
+        success: false,
+        message: "Payment record not found for this order",
       });
-      await paymentHistory.save();
     }
 
+    if (paymentHistory.status === STATUS.PAID) {
+      return res.status(400).json({
+        success: false,
+        message: "This payment has already been verified and processed",
+      });
+    }
+
+    // 3. Create Trust Seal Request ONLY NOW (After successful payment)
+    const trustSealRequest = new TrustSealRequest({
+      user_id: paymentHistory.user_id,
+      subscription_id: paymentHistory.user_subscription_id,
+      amount: paymentHistory.amount / 100, // back to rupees for trust seal model if needed, or keep in paise?
+      // Actually, let's look at how trust seal model stores it.
+      // Based on previous code, it was baseAmount (Rupees).
+      gst_percentage: paymentHistory.gst_percentage,
+      gst_amount: paymentHistory.gst_amount / 100,
+      total_amount: paymentHistory.total_amount / 100,
+      razorpay_order_id: paymentHistory.razorpay_order_id,
+      razorpay_payment_id: razorpay_payment_id,
+      razorpay_signature: razorpay_signature,
+      status: STATUS.PENDING,
+      isRead: false,
+      payment_history_id: paymentHistory._id,
+    });
+
+    await trustSealRequest.save();
+
+    // 4. Update PaymentHistory
+    paymentHistory.razorpay_payment_id = razorpay_payment_id;
+    paymentHistory.razorpay_signature = razorpay_signature;
+    paymentHistory.status = STATUS.PAID;
+    paymentHistory.captured = true;
+    paymentHistory.paid_at = new Date();
+    paymentHistory.payment_method = "razorpay";
+    paymentHistory.trust_seal_id = trustSealRequest._id; // Link to new request
+    await paymentHistory.save();
+
     // 5. Fetch additional data for invoice & notifications
-    const user = await User.findById(trustSealRequest.user_id).select("name email");
-    const subscription = await UserSubscription.findById(trustSealRequest.subscription_id);
+    const user = await User.findById(paymentHistory.user_id).select("name email phone");
+    const subscription = await UserSubscription.findById(paymentHistory.user_subscription_id);
     const plan = subscription
       ? await SubscriptionPlan.findById(subscription.subscription_plan_id).select("plan_name")
       : null;
 
-    const paidAt = trustSealRequest.updated_at.toLocaleDateString("en-IN", {
+    const paidAtDate = new Date();
+    const paidAt = paidAtDate.toLocaleDateString("en-IN", {
       year: "numeric",
       month: "long",
       day: "numeric",
@@ -1753,7 +1681,46 @@ exports.verifyTrustSealPayment = async (req, res) => {
       minute: "2-digit",
     });
 
-    const totalAmount = trustSealRequest.total_amount;
+    const totalAmount = paymentHistory.total_amount / 100;
+
+    // 6. Notify Admin (Socket.io)
+    try {
+      const io = global.io;
+      if (io) {
+        io.of("/trust-seal-notifications")
+          .to("trust-seal:admin")
+          .emit("newTrustSealRequest", {
+            _id: trustSealRequest._id,
+            user_id: paymentHistory.user_id,
+            merchantName: user?.name || "Merchant",
+            amount: paymentHistory.amount / 100,
+            totalAmount: totalAmount,
+            status: STATUS.PENDING,
+            isRead: false,
+            created_at: trustSealRequest.createdAt || new Date(),
+          });
+      }
+    } catch (socketErr) {
+      console.error("⚠️ [TrustSeal] Socket emit failed:", socketErr.message);
+    }
+
+    // 7. SMS Notification to User
+    try {
+      if (user?.phone) {
+        const currentDate = new Date().toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        const smsText = `Dear ${user.name || "Merchant"}, your Trust Seal request for Rs. ${totalAmount.toFixed(2)} submitted on ${currentDate} has been received and is under review. – HUNTSWORLD`;
+
+        const smsApiUrl = `https://online.chennaisms.com/api/mt/SendSMS?user=huntsworld&password=india123&senderid=HWHUNT&channel=Trans&DCS=0&flashsms=0&number=${user.phone}&text=${encodeURIComponent(smsText)}`;
+        await axios.get(smsApiUrl);
+      }
+    } catch (err) {
+      console.error(`SMS failed for user`, err.message);
+    }
 
     // 6. Generate professional invoice HTML (improved version)
     const invoiceHtml = `

@@ -59,11 +59,11 @@ exports.createEbookOrder = async (req, res) => {
       durationType: 'percentage',
     });
 
-    if (!gstPlan) {
+    if (!gstPlan && req.body.gst_percentage === undefined) {
       return res.status(404).json({ error: "GST configuration not found" });
     }
 
-    const gstPercentage = gstPlan.price !== undefined ? gstPlan.price : 18; // fallback if not found
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18); // fallback if not found
     const gstAmount = Math.round((baseAmount * gstPercentage) / 100);
     const totalAmount = baseAmount + gstAmount;
 
@@ -143,34 +143,11 @@ exports.createEbookOrder = async (req, res) => {
 
     await paymentHistory.save();
 
-    // 7. Save pending order to EbookPayment
-    const ebookPayment = new EbookPayment({
-      user_id,
-      subscription_id,
-      extra_cities: requestedCities, // original casing preserved
-      amount: baseAmount,
-      gst_percentage: gstPercentage,
-      gst_amount: gstAmount,
-      total_amount: totalAmount,
-      razorpay_order_id: order.id,
-      payment_status: STATUS.CREATED,
-      status: STATUS.ACTIVE_CAP,
-      // Optional: link to payment history if you want bidirectional reference
-      // payment_history_id: paymentHistory._id,
-    });
-
-    await ebookPayment.save();
-
-    // 8. Update payment history with ebook_id (now that ebookPayment exists)
-    paymentHistory.ebook_id = ebookPayment._id;
-    await paymentHistory.save();
-
-    // 9. Response
+    // 7. Success response
     res.status(200).json({
       success: true,
       order,
-      ebookPayment,
-      paymentHistoryId: paymentHistory._id, // optional, can be useful for frontend
+      paymentHistoryId: paymentHistory._id,
       pricing: {
         pricePerCity,
         baseAmount,
@@ -178,7 +155,7 @@ exports.createEbookOrder = async (req, res) => {
         gstAmount,
         totalAmount,
       },
-      message: "Order created successfully. Proceed to payment."
+      message: "Order created successfully. Please proceed to payment."
     });
 
   } catch (error) {
@@ -206,22 +183,48 @@ exports.verifyEbookPayment = async (req, res) => {
       return res.status(400).json({ error: "Invalid signature" });
     }
 
-    // 2. Update EbookPayment record
-    const ebookPayment = await EbookPayment.findOneAndUpdate(
-      { razorpay_order_id },
-      {
-        razorpay_payment_id,
-        razorpay_signature,
-        payment_status: STATUS.CAPTURED,
-        status: STATUS.ACTIVE_CAP, // Activate the record
-        updatedAt: new Date(),
-      },
-      { new: true }
-    );
+    // 2. Find Payment History
+    const paymentHistory = await PaymentHistory.findOne({
+      razorpay_order_id,
+      payment_type: 'e_book',
+    });
 
-    if (!ebookPayment) {
-      return res.status(404).json({ error: "Ebook payment order not found" });
+    if (!paymentHistory) {
+      return res.status(404).json({ error: "Payment record not found" });
     }
+
+    if (paymentHistory.status === STATUS.PAID) {
+      return res.status(400).json({ error: "This payment has already been processed" });
+    }
+
+    // 3. Extract metadata from notes
+    // Format: `E-Book order for ${requestedCities.length} cities: ${requestedCities.join(', ')}`
+    let extra_cities = [];
+    if (paymentHistory.notes) {
+      const parts = paymentHistory.notes.split('cities: ');
+      if (parts.length > 1) {
+        extra_cities = parts[1].split(',').map(c => c.trim());
+      }
+    }
+
+    // 4. Create EbookPayment record (Only NOW after payment)
+    const ebookPayment = new EbookPayment({
+      user_id: paymentHistory.user_id,
+      subscription_id: paymentHistory.user_subscription_id,
+      extra_cities,
+      amount: paymentHistory.amount / 100,
+      gst_percentage: paymentHistory.gst_percentage,
+      gst_amount: paymentHistory.gst_amount / 100,
+      total_amount: paymentHistory.total_amount / 100,
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      payment_status: STATUS.CAPTURED,
+      status: STATUS.ACTIVE_CAP,
+      payment_history_id: paymentHistory._id,
+    });
+
+    await ebookPayment.save();
 
     // Handle Upgrade Cancellation
     if (ebookPayment.upgraded_from_id) {
@@ -231,46 +234,16 @@ exports.verifyEbookPayment = async (req, res) => {
       });
     }
 
-    // 3. Update PaymentHistory
-    const now = new Date();
+    // 5. Update PaymentHistory
+    paymentHistory.razorpay_payment_id = razorpay_payment_id;
+    paymentHistory.razorpay_signature = razorpay_signature;
+    paymentHistory.status = STATUS.PAID;
+    paymentHistory.captured = true;
+    paymentHistory.paid_at = new Date();
+    paymentHistory.ebook_id = ebookPayment._id;
+    await paymentHistory.save();
 
-    const updatedHistory = await PaymentHistory.findOneAndUpdate(
-      { razorpay_order_id },
-      {
-        user_id: ebookPayment.user_id,
-        payment_type: "e_book",
-        ebook_id: ebookPayment._id,
-
-        razorpay_payment_id,
-        razorpay_signature,
-
-        // Ensure amount is in paise (stored in History)
-        amount: Math.round((ebookPayment.amount || 0) * 100),
-        gst_percentage: ebookPayment.gst_percentage,
-        gst_amount: Math.round((ebookPayment.gst_amount || 0) * 100),
-        total_amount: Math.round((ebookPayment.total_amount || 0) * 100),
-
-        currency: "INR",
-
-        status: STATUS.PAID,
-        captured: true,
-        paid_at: now,
-
-        notes: `E-Book cities payment successful • ${ebookPayment.extra_cities?.length || 0} cities unlocked`,
-      },
-      {
-        new: true,
-        upsert: false,
-        runValidators: true
-      }
-    );
-
-    // Optional logging (in production you might want to alert/slack this)
-    if (!updatedHistory) {
-      console.warn(`PaymentHistory record not found for order ${razorpay_order_id} during verification`);
-    }
-
-    // 4. Fetch user & plan info for invoice
+    // 6. Fetch user & plan info for invoice
     const user = await User.findById(ebookPayment.user_id);
     if (!user) {
       return res.status(404).json({ error: "User not found" });

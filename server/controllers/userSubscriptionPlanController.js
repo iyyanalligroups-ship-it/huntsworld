@@ -477,11 +477,11 @@ exports.createSubscription = async (req, res) => {
       category: "gst",
       durationType: "percentage",
     });
-    if (!gstPlan) {
+    if (!gstPlan && req.body.gst_percentage === undefined) {
       return res.status(404).json({ message: "GST plan not found" });
     }
 
-    const gstPercentage = gstPlan.price;
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18);
     const baseAmount = amount;
     const gstAmount = (baseAmount * gstPercentage) / 100;
 
@@ -734,14 +734,14 @@ exports.createOrder = async (req, res) => {
       durationType: "percentage",
     });
 
-    if (!gstPlan) {
+    if (!gstPlan && req.body.gst_percentage === undefined) {
       return res.status(404).json({
         success: false,
         message: "GST configuration missing",
       });
     }
 
-    const gstPercentage = gstPlan.price !== undefined ? gstPlan.price : 18;
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18);
     const gstAmount = (finalBaseAmount * gstPercentage) / 100;
     const totalAmount = finalBaseAmount + gstAmount;
 
@@ -808,40 +808,6 @@ exports.createOrder = async (req, res) => {
     }
 
 
-    /* =========================
-       🔹 CREATE PENDING SUBSCRIPTION + SNAPSHOTS
-    ========================= */
-    const subscriptionData = {
-      user_id,
-      subscription_plan_id,
-
-      plan_snapshot: {
-        plan_name: currentPlan.plan_name,
-        plan_code: currentPlan.plan_code || null,
-        price: finalBaseAmount,           // ← save discounted price
-        currency: currentPlan.currency || "INR",
-        duration_value: duration_value,
-        duration_unit: duration_unit,
-      },
-
-      razorpay_order_id: null,
-      amount: Math.round(finalBaseAmount * 100),
-      gst_percentage: gstPercentage,
-      gst_amount: Math.round(gstAmount * 100),
-      total_amount: Math.round(totalAmount * 100),
-      currency: "INR",
-      receipt,
-      status: STATUS.CREATED,
-      captured: false,
-      is_upgrade,
-
-      auto_off: Boolean(auto_off),
-      auto_renew: Boolean(auto_renew),
-
-      features_snapshot: featuresSnapshot.length > 0 ? featuresSnapshot : []
-    };
-
-
     // 🔁 Validation: If user wants auto-renew, the plan MUST have a Razorpay Plan ID for the current mode
     const isRazorpayLive = razorpay.key_id?.startsWith("rzp_live");
     const activeRazorpayPlanId = isRazorpayLive
@@ -864,13 +830,7 @@ exports.createOrder = async (req, res) => {
           } mode. Please select a different plan or proceed without auto-renewal.`,
         });
       }
-      subscriptionData.razorpay_plan_id = activeRazorpayPlanId;
     }
-
-    const subscription = await UserSubscription.create({
-      ...subscriptionData,
-      auto_renew: isAutoRenew
-    });
 
     let razorpayData;
 
@@ -881,10 +841,6 @@ exports.createOrder = async (req, res) => {
         customer_notify: 1,
         total_count: 30, // Maximum allowed for UPI recurring payments (30 years)
       });
-
-      subscription.razorpay_subscription_id = razorpayData.id;
-      subscription.razorpay_subscription_status = razorpayData.status;
-
     } else {
       // 💳 ONE-TIME PAYMENT → CREATE ORDER
       razorpayData = await razorpay.orders.create({
@@ -893,20 +849,16 @@ exports.createOrder = async (req, res) => {
         receipt,
         payment_capture: 1,
       });
-
-      subscription.razorpay_order_id = razorpayData.id;
     }
 
-    await subscription.save();
-
     /* =========================
-       🧾 PAYMENT HISTORY (DYNAMIC)
+       🧾 PAYMENT HISTORY (PRE-CON подтверждение)
     ========================= */
-    await PaymentHistory.create({
+    const paymentHistory = await PaymentHistory.create({
       user_id,
       payment_type: "subscription",
       subscription_plan_id,
-      user_subscription_id: subscription._id,
+      user_subscription_id: null, // Will be linked after verification
       razorpay_order_id: isAutoRenew ? null : razorpayData.id,
       razorpay_subscription_id: isAutoRenew ? razorpayData.id : null,
 
@@ -918,21 +870,25 @@ exports.createOrder = async (req, res) => {
       receipt,
       status: STATUS.CREATED,
       captured: false,
-      notes: isAutoRenew
-        ? "Recurring subscription requested - awaiting first payment"
-        : "One-time order created, awaiting payment",
+      notes: JSON.stringify({
+        description: isAutoRenew
+          ? "Recurring subscription requested"
+          : `${is_upgrade ? "Upgrade" : "Subscription"} requested`,
+        is_upgrade: !!is_upgrade,
+        auto_off: auto_off !== undefined ? !!auto_off : true,
+        razorpay_plan_id: isAutoRenew ? activeRazorpayPlanId : null,
+      }),
     });
 
     return res.status(201).json({
       success: true,
       message: isAutoRenew
-        ? "Subscription created successfully"
-        : "Order created successfully",
+        ? "Subscription initialized successfully"
+        : "Order initialized successfully",
 
       razorpayData,
-      subscription_id: subscription._id,
+      paymentHistoryId: paymentHistory._id,
       auto_renew: isAutoRenew,
-      // Optional – helps frontend show correct amount
       chargedBaseAmount: finalBaseAmount,
       chargedTotalAmount: totalAmount
     });
@@ -954,8 +910,6 @@ exports.verifyPayment = async (req, res) => {
       razorpay_order_id,
       razorpay_payment_id,
       razorpay_signature,
-      user_id,
-      subscription_plan_id,
       amount, // ← this is usually the original amount (1000) from frontend
     } = req.body;
 
@@ -1011,20 +965,126 @@ exports.verifyPayment = async (req, res) => {
     const expectedPaise = Math.round(expectedTotal * 100);
 
     /* =========================
-       🔹 FETCH PENDING SUBSCRIPTION
+       🔹 FETCH PAYMENT HISTORY
     ========================= */
-    const subscription = await UserSubscription.findOne(
+    const paymentHistory = await PaymentHistory.findOne(
       razorpay_order_id
-        ? { razorpay_order_id }
-        : { razorpay_subscription_id: req.body.razorpay_subscription_id }
+        ? { razorpay_order_id, payment_type: "subscription" }
+        : { razorpay_subscription_id: req.body.razorpay_subscription_id, payment_type: "subscription" }
     );
 
-    if (!subscription) {
+    if (!paymentHistory) {
       return res.status(404).json({
         success: false,
-        message: "Subscription order not found",
+        message: "Payment history record not found",
       });
     }
+
+    if (paymentHistory.status === STATUS.PAID) {
+      return res.status(400).json({
+        success: false,
+        message: "This payment has already been verified and processed",
+      });
+    }
+
+    const { user_id, subscription_plan_id } = paymentHistory;
+    
+    // Parse metadata from notes
+    let metadata = { is_upgrade: false, auto_off: true, razorpay_plan_id: null };
+    try {
+      if (paymentHistory.notes) {
+        const parsed = JSON.parse(paymentHistory.notes);
+        metadata = { ...metadata, ...parsed };
+      }
+    } catch (e) {
+      // Fallback for legacy notes or parsing error
+      metadata.is_upgrade = paymentHistory.notes?.toLowerCase().includes("upgrade") || false;
+    }
+
+    /* =========================
+       🔹 BUILD SNAPSHOTS (Moved from createOrder)
+    ========================= */
+    const currentPlan = await SubscriptionPlan.findById(subscription_plan_id);
+    if (!currentPlan) {
+      return res.status(404).json({ success: false, message: "Subscription plan not found" });
+    }
+
+    const allFeaturesList = await SubscriptionPlanElement.find({ is_active: true }).lean();
+    const currentMappings = await SubscriptionPlanElementMapping.find({
+      subscription_plan_id: subscription_plan_id,
+    }).lean();
+
+    const featuresSnapshot = allFeaturesList.map((feat) => {
+      const mapping = currentMappings.find(m => m.feature_id?.toString() === feat._id.toString());
+      return {
+        feature_id: feat._id,
+        feature_name: feat.feature_name || "Unknown",
+        feature_code: feat.feature_code || "UNKNOWN",
+        is_enabled: mapping ? mapping.is_enabled : false,
+        value: mapping && mapping.value ? {
+          type: String(mapping.value.type).toUpperCase(), // Ensure uppercase for enum
+          data: mapping.value.data,
+          unit: mapping.value.unit
+        } : undefined
+      };
+    });
+
+    const durationFeature = featuresSnapshot.find(f => f.feature_code === FEATURES.DURATION);
+    const durationRawData  = String(durationFeature?.value?.data || '').trim();
+    const durationRawUnit  = String(durationFeature?.value?.unit || '').trim();
+    const DURATION_REGEX_SNAP = /^([\d.]+)\s*([a-zA-Z]*)$/;
+    const snapMatch = durationRawData.match(DURATION_REGEX_SNAP);
+
+    let duration_value = null;
+    let duration_unit  = durationRawUnit || null;
+    if (snapMatch) {
+      duration_value = parseFloat(snapMatch[1]) || null;
+      const embeddedSnapUnit = snapMatch[2]?.toLowerCase().trim();
+      if (embeddedSnapUnit && !duration_unit) duration_unit = embeddedSnapUnit;
+    }
+
+    /* =========================
+       🔹 CREATE USER SUBSCRIPTION (Only NOW after payment)
+    ========================= */
+    const subscription = new UserSubscription({
+      user_id,
+      subscription_plan_id,
+      plan_snapshot: {
+        plan_name: currentPlan.plan_name,
+        plan_code: currentPlan.plan_code || null,
+        price: paymentHistory.amount / 100,
+        currency: currentPlan.currency || "INR",
+        duration_value: duration_value,
+        duration_unit: duration_unit,
+      },
+      razorpay_order_id,
+      razorpay_subscription_id: paymentHistory.razorpay_subscription_id,
+      razorpay_plan_id: metadata.razorpay_plan_id, // Important for auto-renew
+      amount: paymentHistory.amount,
+      gst_percentage: paymentHistory.gst_percentage,
+      gst_amount: paymentHistory.gst_amount,
+      total_amount: paymentHistory.total_amount,
+      currency: paymentHistory.currency,
+      receipt: paymentHistory.receipt,
+      status: STATUS.PAID,
+      captured: true,
+      is_upgrade: metadata.is_upgrade,
+      auto_off: metadata.auto_off,
+      auto_renew: !!paymentHistory.razorpay_subscription_id,
+      features_snapshot: featuresSnapshot,
+    });
+
+    await subscription.save();
+
+    // Link back to payment history
+    paymentHistory.user_subscription_id = subscription._id;
+    paymentHistory.razorpay_payment_id = razorpay_payment_id;
+    paymentHistory.razorpay_signature = razorpay_signature;
+    paymentHistory.status = STATUS.PAID;
+    paymentHistory.captured = true;
+    paymentHistory.paid_at = new Date();
+    paymentHistory.payment_method = 'razorpay';
+    await paymentHistory.save();
 
     const now = new Date();
 
@@ -1606,31 +1666,6 @@ exports.verifyPayment = async (req, res) => {
         );
       }
     }
-
-    /* =========================
-       🧾 UPDATE PAYMENT HISTORY
-    ========================= */
-    const historyQuery = razorpay_order_id
-      ? { razorpay_order_id }
-      : { user_subscription_id: subscription._id, status: STATUS.CREATED };
-
-    await PaymentHistory.findOneAndUpdate(
-      historyQuery,
-      {
-        user_id,
-        payment_type: "subscription",
-        subscription_plan_id,
-        user_subscription_id: subscription._id,
-        razorpay_payment_id,
-        razorpay_signature,
-        amount: Math.round(finalAmount * 100),
-        total_amount: expectedPaise,
-        status: STATUS.PAID,
-        captured: true,
-        paid_at: now,
-        notes: "Subscription payment verified & features activated (discounted amount applied)",
-      }
-    );
 
     /* ============================================================
        💰 DYNAMIC REFERRAL COMMISSION
