@@ -80,7 +80,8 @@ exports.createBaseMemberType = async (req, res) => {
       });
     }
 
-    const newType = new BaseMemberType({ name: name.trim() });
+    const has_full_access = req.body.has_full_access === true;
+    const newType = new BaseMemberType({ name: name.trim(), has_full_access });
     const savedType = await newType.save();
 
     res.status(201).json({
@@ -109,6 +110,10 @@ exports.updateBaseMemberType = async (req, res) => {
   try {
     const typeId = req.params.id;
     const updates = req.body;
+    // ensure has_full_access is boolean
+    if (updates.has_full_access !== undefined) {
+      updates.has_full_access = updates.has_full_access === true;
+    }
 
     const type = await BaseMemberType.findById(typeId);
     if (!type) {

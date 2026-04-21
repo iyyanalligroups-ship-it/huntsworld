@@ -58,6 +58,7 @@ export default function GrocerySellerRequirement() {
   });
 
   const [memberType, setMemberType] = useState("");
+  const [hasFullAccess, setHasFullAccess] = useState(false);
   const [addressErrorMessage, setAddressErrorMessage] = useState("");
   const [customUnit, setCustomUnit] = useState("");
   const [phoneError, setPhoneError] = useState("");
@@ -105,6 +106,7 @@ export default function GrocerySellerRequirement() {
         );
         if (res.data.success) {
           setMemberType(res.data.data?.member_type?.name || "");
+          setHasFullAccess(res.data.data?.member_type?.has_full_access || false);
           setVerifiedBlocked(!res.data.data?.verified_status);
         }
       } catch (err) {
@@ -270,7 +272,7 @@ export default function GrocerySellerRequirement() {
       )}
 
       {/* Blocked overlays */}
-      {memberType !== "Farmer" && memberType !== "farmer" && (
+      {!hasFullAccess && (
         <>
           {addressBlocked && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-900/80 backdrop-blur-sm p-4">

@@ -1225,14 +1225,14 @@ const getGrocerySellerMemberType = async (userId) => {
       };
     }
 
-    // 🔥 Populate member_type to get name field
+    // 🔥 Populate member_type to get name and has_full_access fields
     const seller = await GrocerySeller.findOne(
       { user_id: userId }
     )
       .populate({
         path: "member_type",
         model: "BaseMemberType",
-        select: "name",
+        select: "name has_full_access",
       })
       .lean();
 
@@ -1249,14 +1249,14 @@ const getGrocerySellerMemberType = async (userId) => {
       .toLowerCase();
 
     return {
-      isNonFarmer: normalizedMemberType !== "farmer",
+      hasFullAccess: !!seller.member_type.has_full_access,
       member_type: normalizedMemberType,
     };
 
   } catch (error) {
     console.error("getGrocerySellerMemberType error:", error);
     return {
-      isNonFarmer: false,
+      hasFullAccess: false,
       member_type: null,
     };
   }

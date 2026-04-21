@@ -1152,7 +1152,7 @@ exports.checkUserSubscriptionAndPlan = async (req, res) => {
         const grocerySeller = await GrocerySeller.findOne({ user_id });
         if (grocerySeller?.member_type) {
           const memberType = await BaseMemberType.findById(grocerySeller.member_type);
-          if (memberType?.name?.toLowerCase() === "farmer") {
+          if (memberType?.has_full_access === true) {
             canShowContact = true;
           }
         }

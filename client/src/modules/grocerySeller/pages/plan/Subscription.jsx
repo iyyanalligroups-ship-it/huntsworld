@@ -107,7 +107,7 @@ const SubscriptionPlan = () => {
           }
         );
 
-        if (res.data?.isNonFarmer === false) {
+        if (res.data?.hasFullAccess === true) {
           setMemberBlocked(true);
           setAddressErrorMessage(
             "You already have all the access in this website. No need to buy a plan."

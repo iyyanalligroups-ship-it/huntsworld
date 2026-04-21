@@ -56,51 +56,71 @@ function AddRequirement() {
   const [isFormValid, setIsFormValid] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // States for dynamic business types
   const [businessTypes, setBusinessTypes] = useState([]);
   const [loadingTypes, setLoadingTypes] = useState(true);
   const [typesError, setTypesError] = useState(null);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   // Fetch business types from backend
-  useEffect(() => {
-    const fetchBusinessTypes = async () => {
-      if (!token) {
-        setTypesError("Not logged in - cannot load categories");
-        setLoadingTypes(false);
-        return;
-      }
+  const fetchBusinessTypes = async (pageNum = 1) => {
+    if (!token) {
+      setTypesError("Not logged in - cannot load categories");
+      setLoadingTypes(false);
+      return;
+    }
 
-      try {
-        setLoadingTypes(true);
-        setTypesError(null);
+    try {
+      if (pageNum === 1) setLoadingTypes(true);
+      else setLoadingMore(true);
+      setTypesError(null);
 
-        const response = await axios.get(
-          `${import.meta.env.VITE_API_URL}/base-member-types/fetch-all-base-member-types`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/base-member-types/fetch-all-base-member-types?limit=10&page=${pageNum}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-        if (response.data.success) {
+      if (response.data.success) {
+        if (pageNum === 1) {
           setBusinessTypes(response.data.data || []);
         } else {
-          setTypesError(response.data.message || "Failed to load categories");
+          setBusinessTypes((prev) => [...prev, ...(response.data.data || [])]);
         }
-      } catch (err) {
-        setTypesError(err.response?.data?.message || "Network error");
-      } finally {
-        setLoadingTypes(false);
+        
+        if (response.data.pagination) {
+          const { currentPage, totalPages } = response.data.pagination;
+          setHasMore(currentPage < totalPages);
+          setPage(currentPage);
+        } else {
+          setHasMore(false);
+        }
+      } else {
+        setTypesError(response.data.message || "Failed to load categories");
       }
-    };
+    } catch (err) {
+      setTypesError(err.response?.data?.message || "Network error");
+    } finally {
+      setLoadingTypes(false);
+      setLoadingMore(false);
+    }
+  };
 
-    fetchBusinessTypes();
+  useEffect(() => {
+    fetchBusinessTypes(1);
   }, [token]);
 
-  // Add "Other" as a special option
-  const allOptions = [
-    ...businessTypes.map((t) => ({ _id: t._id, name: t.name })),
-    { _id: "other", name: "Other" },
-  ];
+  const loadMoreTypes = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!loadingMore && hasMore) {
+      fetchBusinessTypes(page + 1);
+    }
+  };
+
+  // Add "Other" as a special option will be handled manually in the JSX list now.
 
   // Validate form whenever relevant data changes
   useEffect(() => {
@@ -536,11 +556,30 @@ function AddRequirement() {
                         <SelectValue placeholder="Select your business type" />
                       </SelectTrigger>
                       <SelectContent>
-                        {allOptions.map((type) => (
+                        {businessTypes.map((type) => (
                           <SelectItem key={type._id} value={type._id}>
                             {type.name}
                           </SelectItem>
                         ))}
+                        
+                        {hasMore && (
+                          <div 
+                            className="px-2 py-2 w-full flex justify-center hover:bg-slate-100 cursor-pointer rounded-md"
+                            onPointerDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              loadMoreTypes(e);
+                            }}
+                          >
+                            <span className="text-xs text-indigo-600 font-semibold flex items-center gap-2">
+                              {loadingMore ? <Loader2 className="w-3 h-3 animate-spin" /> : "Load 10 More"}
+                            </span>
+                          </div>
+                        )}
+
+                        <SelectItem value="other" className="font-semibold text-indigo-700">
+                          Other
+                        </SelectItem>
                       </SelectContent>
                     </Select>
 

@@ -61,16 +61,15 @@ exports.sendMessage = async (req, res) => {
         const grocerySeller = await GrocerySeller.findOne(
           { user_id: sender },
           { member_type: 1 }
-        ).lean();
+        ).populate('member_type', 'has_full_access').lean();
 
-        if (grocerySeller?.member_type) {
-          groceryMemberType = String(grocerySeller.member_type)
-            .trim()
-            .toLowerCase();
+        let hasFullAccess = false;
+        if (grocerySeller?.member_type && grocerySeller.member_type.has_full_access) {
+          hasFullAccess = true;
         }
 
-        // 🟢 FARMER → FULL ACCESS (NO RESTRICTION)
-        if (groceryMemberType === "farmer" || groceryMemberType === "Farmer") {
+        // 🟢 BASE MEMBER WITH FULL ACCESS (NO RESTRICTION)
+        if (hasFullAccess) {
         }
 
         // 🔴 NON-FARMER → subscription / one-time logic

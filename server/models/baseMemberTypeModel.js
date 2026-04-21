@@ -8,6 +8,10 @@ const BaseMemberTypeSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    has_full_access: {
+      type: Boolean,
+      default: false,
+    },
   },
   {
     timestamps: true,
