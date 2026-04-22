@@ -14,6 +14,7 @@ const UserSubscription = require("../models/userSubscriptionPlanModel");
 const UserActiveFeature = require("../models/UserActiveFeature");
 const { checkDuplicates } = require("../utils/duplicateCheck");
 const { getSyncVerificationFlags, propagateVerificationReset } = require("../utils/verificationSync");
+const TrustSealRequest = require("../models/trustSealRequestModel");
 
 async function resolveCompanyType(companyTypeInput) {
   if (!companyTypeInput) return null;
@@ -55,8 +56,6 @@ async function resolveCompanyType(companyTypeInput) {
 
   return typeDoc._id;
 }
-
-
 
 exports.createMerchant = async (req, res) => {
   try {
@@ -216,7 +215,6 @@ exports.createMerchant = async (req, res) => {
   }
 };
 
-
 // Check Aadhar uniqueness endpoint
 exports.checkAadhar = async (req, res) => {
   try {
@@ -231,7 +229,6 @@ exports.checkAadhar = async (req, res) => {
     res.status(500).json({ error: "Error checking Aadhar number" });
   }
 };
-
 
 exports.getMerchantByEmailOrPhone = async (req, res) => {
   const { email, phone, page = 1, limit = 10 } = req.query;
@@ -315,8 +312,6 @@ exports.getMerchantByEmailOrPhone = async (req, res) => {
     });
   }
 };
-
-
 
 exports.updateMerchant = async (req, res) => {
   try {
@@ -479,8 +474,6 @@ exports.updateMerchant = async (req, res) => {
   }
 };
 
-
-
 exports.deleteMerchant = async (req, res) => {
   try {
     const { user_id, id } = req.params;
@@ -567,7 +560,6 @@ exports.deleteMerchant = async (req, res) => {
     });
   }
 };
-
 
 exports.createMinimalMerchant = async (req, res) => {
   let createdMerchant = null;
@@ -759,8 +751,6 @@ exports.createMinimalMerchant = async (req, res) => {
     });
   }
 };
-
-
 
 exports.getMerchantByUserId = async (req, res) => {
   try {
@@ -1233,7 +1223,6 @@ exports.checkUserBannerStatus = async (req, res) => {
   }
 };
 
-
 exports.getLowProgressMerchants = async (req, res) => {
   try {
     let { page = 1, limit = 10, unread_only } = req.query;
@@ -1268,7 +1257,6 @@ exports.getLowProgressMerchants = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 
 exports.markMerchantAsRead = async (req, res) => {
   try {
@@ -1339,6 +1327,18 @@ exports.getAllMerchants = async (req, res) => {
       addressMap[addr.user_id.toString()] = addr;
     });
 
+    // ✅ Step 1.25: Fetch all active trust seals in ONE query
+    const activeTrustSeals = await TrustSealRequest.find({
+      user_id: { $in: userIds },
+      status: "verified",
+      expiryDate: { $gt: new Date() }
+    });
+
+    const trustSealMap = {};
+    activeTrustSeals.forEach((ts) => {
+      trustSealMap[ts.user_id.toString()] = ts;
+    });
+
     // ✅ Step 1.3: Collect string ObjectIds for company types
     const stringIds = merchants
       .filter(
@@ -1393,6 +1393,7 @@ exports.getAllMerchants = async (req, res) => {
         ...merchantObj,
         company_type: companyTypeData, // returns object or "-"
         company_address: addressMap[merchantObj.user_id?._id?.toString() || merchantObj.user_id?.toString()] || null,
+        trust_seal: trustSealMap[merchantObj.user_id?._id?.toString() || merchantObj.user_id?.toString()] || null,
       };
     });
 
@@ -1422,8 +1423,16 @@ exports.getMerchantById = async (req, res) => {
       address_type: "company"
     });
 
+    // Fetch active trust seal
+    const activeTrustSeal = await TrustSealRequest.findOne({
+      user_id: merchant.user_id?._id || merchant.user_id,
+      status: "verified",
+      expiryDate: { $gt: new Date() }
+    });
+
     const merchantObj = merchant.toObject();
     merchantObj.company_address = companyAddress;
+    merchantObj.trust_seal = activeTrustSeal;
 
     res.status(200).json(merchantObj);
   } catch (error) {
