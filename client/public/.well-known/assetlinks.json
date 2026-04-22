@@ -7,7 +7,8 @@
       "namespace": "android_app",
       "package_name": "com.huntsworld.app",
       "sha256_cert_fingerprints": [
-        "C6:41:6A:29:AE:12:5B:A1:65:91:56:3F:24:AC:90:E2:08:B3:D6:B9:BB:E2:D9:7D:36:08:2D:04:98:B6:EF:AB"
+        "C6:41:6A:29:AE:12:5B:A1:65:91:56:3F:24:AC:90:E2:08:B3:D6:B9:BB:E2:D9:7D:36:08:2D:04:98:B6:EF:AB",
+        "6A:80:82:E6:A6:92:3B:E4:18:63:86:15:EB:75:57:3F:EC:55:65:DB:E1:E3:22:DB:98:B9:28:D8:60:BE:11:F2"
       ]
     }
   }
