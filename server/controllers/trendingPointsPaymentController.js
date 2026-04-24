@@ -180,9 +180,9 @@ exports.verifyTrendingPointsPayment = async (req, res) => {
     }
 
     // 3. Find and verify Payment History
-    const historyQuery = { 
-        payment_type: PAYMENT_TYPES.TRENDING_POINT,
-        status: { $ne: STATUS.PAID } // only process unpaid ones
+    const historyQuery = {
+      payment_type: PAYMENT_TYPES.TRENDING_POINT,
+      status: { $ne: STATUS.PAID } // only process unpaid ones
     };
     if (razorpay_order_id) {
       historyQuery.razorpay_order_id = razorpay_order_id;
@@ -203,8 +203,8 @@ exports.verifyTrendingPointsPayment = async (req, res) => {
     // Format: `Purchase of ${points} trending points ...`
     let points = 0;
     if (paymentHistory.notes) {
-        const pointsMatch = paymentHistory.notes.match(/Purchase of (\d+) trending points/);
-        points = pointsMatch ? parseInt(pointsMatch[1]) : 0;
+      const pointsMatch = paymentHistory.notes.match(/Purchase of (\d+) trending points/);
+      points = pointsMatch ? parseInt(pointsMatch[1]) : 0;
     }
 
     // 5. Create TrendingPointsPayment record (Only NOW after payment)
@@ -409,7 +409,7 @@ exports.upgradeTrendingPoints = async (req, res) => {
     }
 
     const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18); // fallback
-    const baseAmount = amount; // Base amount (points * pointRate)
+    const baseAmount = Number(amount);
     const gstAmount = (baseAmount * gstPercentage) / 100;
     const totalAmount = baseAmount + gstAmount;
 

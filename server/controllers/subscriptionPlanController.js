@@ -78,12 +78,15 @@ exports.syncWithRazorpay = async (req, res) => {
       });
     }
 
+    // Apply ₹1 discount to the base price for Razorpay Plan creation
+    const discountedPrice = Number(price) > 1 ? Number(price) - 1 : Number(price);
+
     const razorpayPlan = await razorpay.plans.create({
       period: "yearly",
       interval: 1,
       item: {
         name: `${plan_name} (Yearly)`,
-        amount: Number(price) * 100,
+        amount: Math.round(discountedPrice * 100),
         currency: "INR",
         description: `Automatic renewal for ${plan_name}`,
       },
@@ -94,7 +97,7 @@ exports.syncWithRazorpay = async (req, res) => {
       message: "Plan synced with Razorpay successfully",
       razorpay_plan_id: razorpayPlan.id,
       // Also return which mode we are in to help frontend find the right field
-      mode: razorpay.key_id?.startsWith('rzp_live') ? 'live' : 'test'
+      mode: process.env.RAZORPAY_KEY_ID?.startsWith('rzp_live') ? 'live' : 'test'
     });
   } catch (error) {
     console.error("Razorpay sync error:", error);

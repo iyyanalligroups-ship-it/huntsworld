@@ -395,8 +395,7 @@ exports.upgradeEbook = async (req, res) => {
     }
     const ebookPlan = await CommonSubscriptionPlan.findOne({ category: 'ebook' });
     const pricePerCity = ebookPlan?.price ?? 500;
-    const payableCities = locations.filter(city => city !== 'Pondicherry');
-    const baseAmount = payableCities.length * pricePerCity;
+    const baseAmount = locations.length * pricePerCity;
     const gstPercentage = gstPlan.price !== undefined ? gstPlan.price : 18;
     const gstAmount = (baseAmount * gstPercentage) / 100;
     const totalAmount = baseAmount + gstAmount;

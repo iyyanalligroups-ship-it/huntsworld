@@ -482,7 +482,10 @@ exports.createSubscription = async (req, res) => {
     }
 
     const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18);
-    const baseAmount = amount;
+    let baseAmount = Number(amount);
+    if (baseAmount > 1) {
+      baseAmount -= 1;
+    }
     const gstAmount = (baseAmount * gstPercentage) / 100;
 
     // Find Subscription Duration element
@@ -809,7 +812,7 @@ exports.createOrder = async (req, res) => {
 
 
     // 🔁 Validation: If user wants auto-renew, the plan MUST have a Razorpay Plan ID for the current mode
-    const isRazorpayLive = razorpay.key_id?.startsWith("rzp_live");
+    const isRazorpayLive = process.env.RAZORPAY_KEY_ID?.startsWith("rzp_live");
     const activeRazorpayPlanId = isRazorpayLive
       ? currentPlan.razorpay_plan_id_live
       : currentPlan.razorpay_plan_id_test;
@@ -959,10 +962,9 @@ exports.verifyPayment = async (req, res) => {
       durationType: "percentage",
     });
 
-    const gstPercentage = gstPlan?.price || 18; // fallback to 18 if not found
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18);
     const gstAmount = (finalAmount * gstPercentage) / 100;
-    const expectedTotal = finalAmount + gstAmount;
-    const expectedPaise = Math.round(expectedTotal * 100);
+    const totalAmount = finalAmount + gstAmount;
 
     /* =========================
        🔹 FETCH PAYMENT HISTORY
@@ -2141,14 +2143,13 @@ exports.upgradeSubscription = async (req, res) => {
       return res.status(404).json({ message: 'GST plan not found' });
     }
 
-    const gstPercentage = gstPlan.price;
     let baseAmount = Number(amount || 0);
-
     // Apply same ₹1 discount as in createOrder
     if (baseAmount > 1) {
       baseAmount -= 1;
     }
 
+    const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18);
     const gstAmount = (baseAmount * gstPercentage) / 100;
 
     // Calculate prorated amount if upgrading
