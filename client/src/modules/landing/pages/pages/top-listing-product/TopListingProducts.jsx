@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   XCircle,
+  Share2,
 } from 'lucide-react';
 
 // Redux & API Imports
@@ -163,14 +164,35 @@ const ProductCard = ({
           </div>
         </div>
 
-        {userId && (
+        <div className="absolute top-3 right-3 z-20 flex flex-col gap-2">
+          {userId && (
+            <button
+              onClick={(e) => handleToggleFavorite(e, productId)}
+              className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 flex items-center justify-center hover:scale-110 transition-transform active:scale-95"
+            >
+              <Heart className={`w-4 h-4 ${isFavorited ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
+            </button>
+          )}
           <button
-            onClick={(e) => handleToggleFavorite(e, productId)}
-            className="absolute top-3 right-3 z-20 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 flex items-center justify-center hover:scale-110 transition-transform active:scale-95"
+            onClick={(e) => {
+              e.stopPropagation();
+              const shareUrl = `${window.location.origin}/product/${productId}?ref=share`;
+              if (navigator.share) {
+                navigator.share({
+                  title: product.product_name,
+                  text: `Check out ${product.product_name} on HuntsWorld`,
+                  url: shareUrl,
+                }).catch((err) => console.error("Error sharing:", err));
+              } else {
+                navigator.clipboard.writeText(shareUrl);
+                showToast('Link copied to clipboard!', 'success');
+              }
+            }}
+            className="w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full shadow-sm border border-gray-200 flex items-center justify-center hover:scale-110 transition-transform active:scale-95 text-gray-600 hover:text-[#0c1f4d]"
           >
-            <Heart className={`w-4 h-4 ${isFavorited ? "fill-red-500 text-red-500" : "text-gray-400"}`} />
+            <Share2 className="w-4 h-4" />
           </button>
-        )}
+        </div>
 
         <div className="relative w-full h-full p-6 flex items-center justify-center">
           <img src={firstImage} alt={product.product_name} loading="lazy" className="w-full h-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-500" />
@@ -680,7 +702,7 @@ const TopSellers = () => {
 
       {/* Other Modals */}
       {selectedProduct && <ProductQuoteModel product={selectedProduct} productId={selectedProduct._id} open={!!selectedProduct} setOpen={() => setSelectedProduct(null)} userId={loggedInUserId} phone={phone} />}
-      {showLoginModal && <LoginModel isOpen={showLoginModal} setIsOpen={setShowLoginModal} />}
+      {showLoginModal && <LoginModel isOpen={showLoginModal} setIsOpen={setShowLoginModal} redirectOnLogin={false} />}
     </div>
   );
 };

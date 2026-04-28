@@ -252,7 +252,7 @@ const ActivePlanCard = ({ onCancel, onUpgrade, plan: propPlan }) => {
                   <div className="flex items-baseline gap-1 mb-8">
                     <span className="text-lg font-bold text-indigo-200">₹</span>
                     <span className="text-5xl font-black tracking-tighter">
-                      {(Math.round(plan.amount / 100) - 1).toLocaleString("en-IN")}
+                      {(plan.amount / 100).toLocaleString("en-IN")}
                     </span>
                     <span className="text-xs font-bold text-slate-400 ml-2">Plan Amount</span>
                   </div>

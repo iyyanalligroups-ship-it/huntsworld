@@ -1448,8 +1448,11 @@ exports.verifyPayment = async (req, res) => {
         const isBuyLeads = (featureCode === FEATURES.BUY_LEADS) || (!featureCode && featureName === "buy leads");
         const isDealers = (featureCode === FEATURES.ADDING_OF_DEALERS) || (!featureCode && featureName === "adding of dealers");
         const isPersonalManager = (featureCode === FEATURES.PERSONAL_MANAGER) || (!featureCode && featureName === "personal manager");
+        const isContactNumber = (featureCode === FEATURES.CONTACT_NUMBER) || (!featureCode && featureName === "contact number");
+        const isBaseMemberReq = (featureCode === FEATURES.BASE_MEMBER_REQUIREMENTS) || (!featureCode && featureName === "base member requirements");
+        const isMarketingTeam = (featureCode === FEATURES.MARKETING_TEAM_ASSIGNING) || (!featureCode && featureName === "marketing team assigning");
 
-        if (isChat || isBuyLeads || isDealers || isPersonalManager) continue;
+        if (isChat || isBuyLeads || isDealers || isPersonalManager || isContactNumber || isBaseMemberReq || isMarketingTeam) continue;
         if (!featureSnap.is_enabled) continue;
 
         const value = featureSnap.value;
@@ -1660,6 +1663,108 @@ exports.verifyPayment = async (req, res) => {
           {
             user_subscription_id: subscription._id,
             feature_id: managerFeature._id,
+            activated_at: now,
+            expires_at: subscription.end_date,
+            status: STATUS.ACTIVE
+          },
+          { upsert: true, new: true }
+        );
+      }
+    }
+
+    /* =========================
+       🔹 ACTIVATE: CONTACT NUMBER
+    ========================= */
+    const contactNumberFeature = await SubscriptionPlanElement.findOne({
+      $or: [
+        { feature_code: FEATURES.CONTACT_NUMBER },
+        { feature_name: { $regex: /^contact number$/i } }
+      ]
+    });
+
+    if (contactNumberFeature) {
+      const contactMapping = await SubscriptionPlanElementMapping.findOne({
+        subscription_plan_id: subscription_plan_id,
+        feature_id: contactNumberFeature._id,
+        is_enabled: true
+      });
+
+      if (contactMapping && (contactMapping.value?.data === "enable" || contactMapping.value?.data === "free")) {
+        await UserActiveFeature.findOneAndUpdate(
+          { user_id, feature_code: FEATURES.CONTACT_NUMBER },
+          {
+            user_id,
+            user_subscription_id: subscription._id,
+            feature_id: contactNumberFeature._id,
+            feature_code: FEATURES.CONTACT_NUMBER,
+            activated_at: now,
+            expires_at: subscription.end_date,
+            status: STATUS.ACTIVE
+          },
+          { upsert: true, new: true }
+        );
+      }
+    }
+
+    /* =========================
+       🔹 ACTIVATE: BASE MEMBER REQUIREMENTS
+    ========================= */
+    const baseMemberFeature = await SubscriptionPlanElement.findOne({
+      $or: [
+        { feature_code: FEATURES.BASE_MEMBER_REQUIREMENTS },
+        { feature_name: { $regex: /^base member requirements$/i } }
+      ]
+    });
+
+    if (baseMemberFeature) {
+      const baseMemberMapping = await SubscriptionPlanElementMapping.findOne({
+        subscription_plan_id: subscription_plan_id,
+        feature_id: baseMemberFeature._id,
+        is_enabled: true
+      });
+
+      if (baseMemberMapping && (baseMemberMapping.value?.data === "enable" || baseMemberMapping.value?.data === "free")) {
+        await UserActiveFeature.findOneAndUpdate(
+          { user_id, feature_code: FEATURES.BASE_MEMBER_REQUIREMENTS },
+          {
+            user_id,
+            user_subscription_id: subscription._id,
+            feature_id: baseMemberFeature._id,
+            feature_code: FEATURES.BASE_MEMBER_REQUIREMENTS,
+            activated_at: now,
+            expires_at: subscription.end_date,
+            status: STATUS.ACTIVE
+          },
+          { upsert: true, new: true }
+        );
+      }
+    }
+
+    /* =========================
+       🔹 ACTIVATE: MARKETING TEAM ASSIGNING
+    ========================= */
+    const marketingTeamFeature = await SubscriptionPlanElement.findOne({
+      $or: [
+        { feature_code: FEATURES.MARKETING_TEAM_ASSIGNING },
+        { feature_name: { $regex: /^marketing team assigning$/i } }
+      ]
+    });
+
+    if (marketingTeamFeature) {
+      const marketingTeamMapping = await SubscriptionPlanElementMapping.findOne({
+        subscription_plan_id: subscription_plan_id,
+        feature_id: marketingTeamFeature._id,
+        is_enabled: true
+      });
+
+      if (marketingTeamMapping && (marketingTeamMapping.value?.data === "enable" || marketingTeamMapping.value?.data === "free")) {
+        await UserActiveFeature.findOneAndUpdate(
+          { user_id, feature_code: FEATURES.MARKETING_TEAM_ASSIGNING },
+          {
+            user_id,
+            user_subscription_id: subscription._id,
+            feature_id: marketingTeamFeature._id,
+            feature_code: FEATURES.MARKETING_TEAM_ASSIGNING,
             activated_at: now,
             expires_at: subscription.end_date,
             status: STATUS.ACTIVE

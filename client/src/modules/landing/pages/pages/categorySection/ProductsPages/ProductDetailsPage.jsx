@@ -17,11 +17,15 @@ import {
   ChevronRight,
   Eye,
   ExternalLink,
+  Share2,
 } from "lucide-react";
+import showToast from "@/toast/showToast";
 import {
   useGetProductByNameQuery,
   useGetReviewsByProductQuery,
+  useGiveTrendingPointMutation,
 } from "@/redux/api/ProductApi";
+import LoginModel from "@/modules/landing/modelLogin/Login";
 import {
   Tooltip,
   TooltipContent,
@@ -97,6 +101,29 @@ const ProductDetailsPage = () => {
   const [trustSealStatus, setTrustSealStatus] = useState(null);
   const [trustSealData, setTrustSealData] = useState(null);
   const [isVerified, setIsVerified] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const trackedRef = useRef(false);
+  const [giveTrendingPoint] = useGiveTrendingPointMutation();
+
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isShared = urlParams.get('ref') === 'share';
+
+    if (isShared && !trackedRef.current && productData?.product?._id) {
+      if (!userId) {
+        setShowLoginModal(true);
+      } else {
+        trackedRef.current = true;
+        giveTrendingPoint({ user_id: userId, product_id: productData.product._id })
+          .unwrap()
+          .then((res) => console.log("Shared link trending point added", res))
+          .catch((err) => {
+            console.error("Shared link trending error", err);
+            trackedRef.current = false; // allow retry if failed
+          });
+      }
+    }
+  }, [userId, productData?.product?._id, giveTrendingPoint]);
   const imageRef = useRef(null);
   const lensSize = 100;
   const [thumbStartIndex, setThumbStartIndex] = useState(0);
@@ -562,6 +589,31 @@ const ProductDetailsPage = () => {
                     })()}
                   </h1>
                   <StarRating productId={product?._id} />
+                  <Button
+                    onClick={() => {
+                      const currentUrl = new URL(window.location.href);
+                      if (!currentUrl.searchParams.has('ref')) {
+                        currentUrl.searchParams.set('ref', 'share');
+                      }
+                      const shareUrl = currentUrl.toString();
+                      
+                      if (navigator.share) {
+                        navigator.share({
+                          title: cleanProductName,
+                          text: `Check out ${cleanProductName} on Huntsworld`,
+                          url: shareUrl,
+                        }).catch(console.error);
+                      } else {
+                        navigator.clipboard.writeText(shareUrl);
+                        showToast('Link copied to clipboard!', 'success');
+                      }
+                    }}
+                    variant="outline"
+                    className="h-8 px-3 rounded-full flex items-center gap-2 ml-auto text-gray-600 hover:text-[#0c6180] hover:border-[#0c6180] transition-colors cursor-pointer"
+                  >
+                    <Share2 className="w-4 h-4" />
+                    Share
+                  </Button>
                 </div>
                 <p className="text-lg text-gray-700 mt-2">
                   ₹ {product?.price?.$numberDecimal}
@@ -799,6 +851,7 @@ const ProductDetailsPage = () => {
             setOpen={setOpenQuoteModal}
           />
         )}
+        <LoginModel isOpen={showLoginModal} setIsOpen={setShowLoginModal} redirectOnLogin={false} />
       </div>
     </div>
   );

@@ -374,7 +374,7 @@ const SubscriptionPlan = () => {
                       </span>
                       {strike_amount && (
                         <span className="text-xs text-slate-300 line-through font-bold ml-2 opacity-50">
-                          ₹{(strike_amount - 1).toLocaleString('en-IN')}
+                          ₹{strike_amount.toLocaleString('en-IN')}
                         </span>
                       )}
                     </div>

@@ -164,7 +164,7 @@ const UpgradePlanPage = () => {
                       {plan.subscription_plan_id.plan_name}
                     </CardTitle>
                     <div className="mt-3 flex items-baseline justify-center text-[#0c1f4d]">
-                      <span className="text-4xl font-extrabold">₹{Math.round(price) > 0 ? (Math.round(price) - 1).toLocaleString("en-IN") : 0}</span>
+                      <span className="text-4xl font-extrabold">₹{price > 0 ? (price - 1).toLocaleString("en-IN") : 0}</span>
                       <span className="ml-1 text-sm font-medium text-slate-500">/year</span>
                     </div>
                   </CardHeader>

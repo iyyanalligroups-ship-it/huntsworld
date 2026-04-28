@@ -23,7 +23,7 @@ import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
 import { Eye, EyeOff } from "lucide-react";
 
-const Login = ({ isOpen, setIsOpen }) => {
+const Login = ({ isOpen, setIsOpen, redirectOnLogin = true }) => {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
   const [loginType, setLoginType] = useState("email");
@@ -174,7 +174,9 @@ const Login = ({ isOpen, setIsOpen }) => {
 
       showToast("Login successful", "success");
       setIsOpen(false);
-      navigate(decodedToken.role === "ADMIN" ? "/admin" : "/");
+      if (redirectOnLogin || decodedToken.role === "ADMIN") {
+        navigate(decodedToken.role === "ADMIN" ? "/admin" : "/");
+      }
     } catch (err) {
       console.error("OTP Verification Error:", err);
       showToast(
@@ -254,7 +256,9 @@ const Login = ({ isOpen, setIsOpen }) => {
 
       showToast(response.message || "Login successful", "success");
       setIsOpen(false);
-      navigate(decodedToken.role === "ADMIN" ? "/admin" : "/");
+      if (redirectOnLogin || decodedToken.role === "ADMIN") {
+        navigate(decodedToken.role === "ADMIN" ? "/admin" : "/");
+      }
     } catch (err) {
       // API / auth error
       setErrors({
