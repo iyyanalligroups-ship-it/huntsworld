@@ -56,7 +56,8 @@ exports.getSellerBySlug = async (req, res) => {
         .populate({
           path: "address_id",
           select: "street city state country postal_code",
-        });
+        })
+        .populate("company_type");
     };
 
     /* ===================== MERCHANT ===================== */

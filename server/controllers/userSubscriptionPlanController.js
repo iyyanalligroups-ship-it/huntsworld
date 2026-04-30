@@ -746,7 +746,10 @@ exports.createOrder = async (req, res) => {
 
     const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18);
     const gstAmount = (finalBaseAmount * gstPercentage) / 100;
-    const totalAmount = finalBaseAmount + gstAmount;
+    let totalAmount = finalBaseAmount + gstAmount;
+    if (totalAmount > 1) {
+      totalAmount -= 1;
+    }
 
     const receipt = `receipt_${Date.now()}`;
 
@@ -964,7 +967,10 @@ exports.verifyPayment = async (req, res) => {
 
     const gstPercentage = req.body.gst_percentage !== undefined ? Number(req.body.gst_percentage) : (gstPlan.price !== undefined ? gstPlan.price : 18);
     const gstAmount = (finalAmount * gstPercentage) / 100;
-    const totalAmount = finalAmount + gstAmount;
+    let totalAmount = finalAmount + gstAmount;
+    if (totalAmount > 1) {
+      totalAmount -= 1;
+    }
 
     /* =========================
        🔹 FETCH PAYMENT HISTORY

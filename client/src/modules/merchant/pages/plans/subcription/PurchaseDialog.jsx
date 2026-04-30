@@ -29,7 +29,6 @@ const PurchaseDialog = ({
   const [verifyPayment] = useVerifyPaymentMutation();
   const [upgradeSubscription] = useUpgradeSubscriptionMutation();
   const [isLoading, setIsLoading] = useState(false);
-  const [autoOff, setAutoOff] = useState(false);
   const [autoRenew, setAutoRenew] = useState(false);
 
   const { data: gstPlanData, isLoading: isGSTLoading, error: gstError } = useGetGSTPlanQuery();
@@ -77,7 +76,6 @@ const PurchaseDialog = ({
         user_id: userId,
         subscription_plan_id: plan.subscription_plan_id._id,
         amount: plan.subscription_plan_id.price,
-        auto_off: autoOff,
         auto_renew: autoRenew,
       }).unwrap();
 
@@ -248,24 +246,7 @@ const PurchaseDialog = ({
                 })()}
               </div>
 
-              {/* Auto-disable option */}
-              <div className="flex items-start gap-3 pt-2">
-                <input
-                  type="checkbox"
-                  id="auto-off"
-                  checked={autoOff}
-                  onChange={(e) => setAutoOff(e.target.checked)}
-                  disabled={isAnyLoading}
-                  className="mt-1 h-4 w-4 rounded border-slate-300 text-green-600 focus:ring-green-500"
-                />
-                <label
-                  htmlFor="auto-off"
-                  className="text-sm text-slate-600 cursor-pointer select-none leading-snug"
-                >
-                  Automatically disable this plan when it expires <br />
-                  <span className="text-xs text-slate-500">(recommended – no automatic renewal)</span>
-                </label>
-              </div>
+
 
               {/* Auto-renew option */}
               <div className="flex items-start gap-3 pt-2">

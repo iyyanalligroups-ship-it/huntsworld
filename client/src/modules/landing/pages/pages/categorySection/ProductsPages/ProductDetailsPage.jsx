@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dialog";
 import ProductAttributesPage from "./ProductAttributePage";
 import ProductQuoteModel from "./model/ProductQuoteModel";
+import AskPriceModal from "@/modules/landing/pages/pages/products/AskPriceModal";
 import RequestPhoneNumberButton from "./RequestPhoneNumberButton";
 import TrustSealCertificate from "./TrustSealCertificate";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,29 @@ const formatName = (value) => {
     .replace(/[-_]/g, " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
 };
+
+const getUnitLabel = (unitValue) => {
+  if (!unitValue) return "";
+
+  const found = unitOptions.find(
+    (u) => u.value.toLowerCase() === unitValue.toLowerCase()
+  );
+
+  return found ? found.label : unitValue;
+};
+
+const unitOptions = [
+  { label: "Kilogram", value: "kg" },
+  { label: "Gram", value: "g" },
+  { label: "Ton", value: "ton" },
+  { label: "Piece", value: "pcs" },
+  { label: "Liter", value: "ltr" },
+  { label: "Meter", value: "m" },
+  { label: "Centimeter", value: "cm" },
+  { label: "Dozen", value: "dz" },
+  { label: "Pack", value: "pk" },
+  { label: "Other", value: "other" },
+];
 
 const socket = io(import.meta.env.VITE_SOCKET_IO_URL, {
   withCredentials: true,
@@ -102,6 +126,8 @@ const ProductDetailsPage = () => {
   const [trustSealData, setTrustSealData] = useState(null);
   const [isVerified, setIsVerified] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [openAskPriceModal, setOpenAskPriceModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const trackedRef = useRef(false);
   const [giveTrendingPoint] = useGiveTrendingPointMutation();
 
@@ -127,7 +153,7 @@ const ProductDetailsPage = () => {
   const imageRef = useRef(null);
   const lensSize = 100;
   const [thumbStartIndex, setThumbStartIndex] = useState(0);
-  const visibleThumbCount = 4;
+  const visibleThumbCount = 3;
 
   useEffect(() => {
     setActiveImageIndex(0);
@@ -310,10 +336,25 @@ const ProductDetailsPage = () => {
               e.target.src = defaultImage;
             }}
           />
-          <div className="absolute top-4 left-4 backdrop-blur-md bg-white/80 border border-white/20 px-3 py-1.5 rounded-full shadow-sm">
-            <p className="text-sm font-bold text-gray-900">
-              ₹ {relatedProduct.price?.$numberDecimal || "Request"}
-            </p>
+          <div className="absolute top-4 left-4 z-20">
+            {relatedProduct?.askPrice || parseFloat(relatedProduct.price?.$numberDecimal || relatedProduct.price || 0) === 0 ? (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedProduct(relatedProduct);
+                  setOpenAskPriceModal(true);
+                }}
+                className="bg-red-600 hover:bg-[#0c1f4d] text-white text-xs h-8 px-4 rounded-md shadow-sm transition-colors"
+              >
+                Ask Price
+              </Button>
+            ) : (
+              <div className="backdrop-blur-md bg-white/80 border border-white/20 px-3 py-1.5 rounded-full shadow-sm">
+                <p className="text-sm font-bold text-gray-900">
+                  ₹ {relatedProduct.price?.$numberDecimal || "Request"}
+                </p>
+              </div>
+            )}
           </div>
           <div className="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
             <button
@@ -615,9 +656,29 @@ const ProductDetailsPage = () => {
                     Share
                   </Button>
                 </div>
-                <p className="text-lg text-gray-700 mt-2">
-                  ₹ {product?.price?.$numberDecimal}
-                </p>
+                <div>
+                  {product?.askPrice || parseFloat(product.price?.$numberDecimal || product.price || 0) === 0 ? (
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedProduct(product);
+                        setOpenAskPriceModal(true);
+                      }}
+                      className="bg-red-600 hover:bg-[#0c1f4d] text-white text-xs h-8 px-4 rounded-md shadow-sm transition-colors mt-1 mb-2"
+                    >
+                      Ask Price
+                    </Button>
+                  ) : (
+                    <>
+                      <span className="text-xl font-extrabold text-[#0c1f4d]">
+                        ₹{Math.round(parseFloat(product.price?.$numberDecimal || 0)).toLocaleString("en-IN")}{" / "}
+                      </span>
+                      <span className="text-gray-400 text-[10px]">
+                        {getUnitLabel(product?.unitOfMeasurement)}
+                      </span>
+                    </>
+                  )}
+                </div>
               </div>
               <div className="mt-4">
                 {productAttributes.slice(0, 4).map((attr, index) => (
@@ -852,6 +913,13 @@ const ProductDetailsPage = () => {
           />
         )}
         <LoginModel isOpen={showLoginModal} setIsOpen={setShowLoginModal} redirectOnLogin={false} />
+        {openAskPriceModal && (
+          <AskPriceModal
+            isOpen={openAskPriceModal}
+            onClose={() => setOpenAskPriceModal(false)}
+            product={selectedProduct}
+          />
+        )}
       </div>
     </div>
   );

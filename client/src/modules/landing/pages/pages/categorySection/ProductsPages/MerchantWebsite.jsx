@@ -675,8 +675,9 @@ function MerchantWebsite() {
   const logo = seller?.company_logo || "/default-logo.png";
 
   useEffect(() => {
-    if (seller?.createdAt) {
-      const establishmentYear = new Date(seller.createdAt).getFullYear();
+    const establishmentYear = seller?.year_of_establishment || (seller?.createdAt ? new Date(seller.createdAt).getFullYear() : 0);
+    
+    if (establishmentYear) {
       let start = 0;
       const end = establishmentYear;
       const duration = 2000;
@@ -1133,22 +1134,42 @@ function MerchantWebsite() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4 p-6 sm:p-8">
-                {seller.msme && (
+                {seller?.company_type && (
                   <div className="flex items-center justify-between border-b border-gray-200 pb-3">
-                    <span className="text-gray-500 font-medium">MSME</span>
-                    <span className="font-bold text-gray-800">{seller.msme}</span>
+                    <span className="text-gray-500 font-medium">Nature of Business</span>
+                    <span className="font-bold text-gray-800">{seller.company_type.displayName || seller.company_type.name || "N/A"}</span>
                   </div>
                 )}
-                {seller.gst && (
+                {(seller.msme_certificate_number || seller.msme) && (
+                  <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                    <span className="text-gray-500 font-medium">MSME</span>
+                    <span className="font-bold text-gray-800">{seller.msme_certificate_number || seller.msme}</span>
+                  </div>
+                )}
+                {(seller.gst_number || seller.gst) && (
                   <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                     <span className="text-gray-500 font-medium">GST</span>
-                    <span className="font-bold text-gray-800">{seller.gst}</span>
+                    <span className="font-bold text-gray-800">{seller.gst_number || seller.gst}</span>
                   </div>
                 )}
                 {seller.pan && (
                   <div className="flex items-center justify-between border-b border-gray-200 pb-3">
                     <span className="text-gray-500 font-medium">PAN</span>
                     <span className="font-bold text-gray-800">{seller.pan}</span>
+                  </div>
+                )}
+                {seller.number_of_employees && (
+                  <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                    <span className="text-gray-500 font-medium">Employees</span>
+                    <span className="font-bold text-gray-800">{seller.number_of_employees}</span>
+                  </div>
+                )}
+                {seller.domain_name && (
+                  <div className="flex items-center justify-between border-b border-gray-200 pb-3">
+                    <span className="text-gray-500 font-medium">Website</span>
+                    <a href={`https://${seller.domain_name}`} target="_blank" rel="noopener noreferrer" className="font-bold text-blue-600 hover:underline">
+                      {seller.domain_name}
+                    </a>
                   </div>
                 )}
                 {seller?.company_email && (

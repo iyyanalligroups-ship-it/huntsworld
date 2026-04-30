@@ -93,6 +93,22 @@ const PaymentHistory = () => {
         return p.payment_type;
     };
 
+    const formatNotes = (notes) => {
+        if (!notes) return 'N/A';
+        try {
+            // Check if it's a JSON string (starts with { and ends with })
+            if (typeof notes === 'string' && notes.trim().startsWith('{') && notes.trim().endsWith('}')) {
+                const parsed = JSON.parse(notes);
+                if (parsed.description) return parsed.description;
+                // If it's JSON but no description, maybe return a cleaned up version or the original
+                return notes;
+            }
+            return notes;
+        } catch (e) {
+            return notes;
+        }
+    };
+
     // --- PDF Export Logic ---
     const exportToPDF = (p) => {
         const doc = new jsPDF();
@@ -165,7 +181,8 @@ const PaymentHistory = () => {
         doc.setFontSize(10);
         doc.setTextColor(80);
 
-        const splitNotes = doc.splitTextToSize(p.notes || 'N/A', 180);
+        const formattedNotes = formatNotes(p.notes);
+        const splitNotes = doc.splitTextToSize(formattedNotes, 180);
         doc.text(splitNotes, 14, finalY + 22);
 
         // 6. Footer
@@ -221,7 +238,7 @@ const PaymentHistory = () => {
             <div className="text-[11px] space-y-1 bg-muted/20 p-2 rounded">
                 <p><strong>Paid At:</strong> {new Date(p.paid_at).toLocaleString()}</p>
                 <p><strong>Receipt:</strong> {p.receipt}</p>
-                <p><strong>Notes:</strong> {p.notes || 'N/A'}</p>
+                <p><strong>Notes:</strong> {formatNotes(p.notes)}</p>
             </div>
 
             <Button className="w-full mt-2" onClick={() => exportToPDF(p)}>

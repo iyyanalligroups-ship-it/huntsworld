@@ -72,7 +72,7 @@ const SubscriptionCard = ({ subscription, isFreePlan }) => {
                   <>
                     <span className="opacity-80">|</span>
                     <span className="font-bold text-white">
-                      ₹{subscription.price.toFixed(0)}
+                      ₹{(subscription.price > 0 ? subscription.price - 1 : 0).toFixed(0)}
                     </span>
                     <span className="opacity-90">
                       ({subscription.duration || "N/A"})
